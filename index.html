@@ -1,19 +1,845 @@
-﻿<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>GridironIQ</title><link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet"/><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#07090f;font-family:'DM Mono','Courier New',monospace;color:#e2e8f0;min-height:100vh}.header{background:#0b0f1a;border-bottom:1px solid #131c2e;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#fff}.logo span{color:#00ff87}.subtitle{font-size:9px;color:#2d3f55;letter-spacing:2.5px;margin-top:1px}.user-badge{font-size:10px;color:#2d3f55;background:#0d1520;border:1px solid #131c2e;padding:5px 10px;border-radius:6px}.container{max-width:700px;margin:0 auto;padding:20px 14px 40px}.section-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:#fff}.section-sub{font-size:9px;color:#2d3f55;letter-spacing:1.5px;margin-top:3px}.group-label{font-size:9px;color:#2d3f55;letter-spacing:2px;margin-bottom:7px;margin-top:18px}.wr-card{background:#0b0f1a;border:1px solid #131c2e;border-radius:10px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;transition:all .18s ease}.wr-card:hover{transform:translateY(-1px)}.wr-card.selected{outline:1.5px solid #00ff87}.avatar{width:32px;height:32px;background:#131c2e;border-radius:7px;display:flex;align-
-@'
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>GridironIQ</title><link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet"/><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#07090f;font-family:'DM Mono','Courier New',monospace;color:#e2e8f0;min-height:100vh}.header{background:#0b0f1a;border-bottom:1px solid #131c2e;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}.logo{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#fff}.logo span{color:#00ff87}.subtitle{font-size:9px;color:#2d3f55;letter-spacing:2.5px;margin-top:1px}.user-badge{font-size:10px;color:#2d3f55;background:#0d1520;border:1px solid #131c2e;padding:5px 10px;border-radius:6px}.container{max-width:700px;margin:0 auto;padding:20px 14px 40px}.section-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:#fff}.section-sub{font-size:9px;color:#2d3f55;letter-spacing:1.5px;margin-top:3px}.group-label{font-size:9px;color:#2d3f55;letter-spacing:2px;margin-bottom:7px;margin-top:18px}.wr-card{background:#0b0f1a;border:1px solid #131c2e;border-radius:10px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;transition:all .18s ease}.wr-card:hover{transform:translateY(-1px)}.wr-card.selected{outline:1.5px solid #00ff87}.avatar{width:32px;height:32px;background:#131c2e;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#00ff87;flex-shrink:0}.wr-info{margin-left:11px}.wr-name{font-size:13px;color:#e2e8f0;font-weight:500}.wr-meta{font-size:10px;color:#4a5568;margin-top:2px}.wr-right{display:flex;align-items:center;gap:7px}.inj-badge{font-size:9px;color:#ff4d6d;background:rgba(255,77,109,.1);padding:3px 7px;border-radius:4px}.status-dot{width:6px;height:6px;border-radius:50%}.btn{cursor:pointer;border:none;transition:all .15s ease;font-family:'DM Mono',monospace}.btn:hover{opacity:.88}.btn:active{transform:scale(.98)}.btn-primary{background:linear-gradient(135deg,#00ff87,#00cc6a);color:#07090f;padding:14px;border-radius:10px;font-size:13px;letter-spacing:2px;font-family:'Bebas Neue',sans-serif;width:100%;margin-top:16px}.btn-secondary{background:transparent;border:1px solid #131c2e;color:#4a5568;padding:10px;border-radius:8px;font-size:9px;letter-spacing:1.5px;flex:1}.btn-row{display:flex;gap:7px;margin-top:8px}.error-box{background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.25);border-radius:8px;padding:11px 14px;margin-bottom:14px;font-size:11px;color:#ff4d6d;word-break:break-word}.spinner{width:44px;height:44px;border:2px solid #131c2e;border-top:2px solid #00ff87;border-radius:50%;margin:0 auto 24px;animation:spin .9s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.analyzing{text-align:center;padding:80px 20px}.analyzing-title{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:3px;color:#fff;margin-bottom:8px}.analyzing-sub{font-size:9px;color:#2d3f55;letter-spacing:2px;animation:pulse 1.8s ease infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}.narrative-card{background:#0b0f1a;border:1px solid #131c2e;border-left:3px solid #00ff87;border-radius:10px;padding:15px 17px;margin-bottom:9px}.narrative-label{font-size:9px;color:#00ff87;letter-spacing:2px;margin-bottom:7px}.narrative-text{font-size:12px;color:#94a3b8;line-height:1.65}.meta-row{display:flex;gap:9px;margin-bottom:9px}.grade-card{background:#0b0f1a;border:1px solid #131c2e;border-radius:10px;padding:13px 15px;min-width:80px}.grade-label{font-size:9px;color:#2d3f55;letter-spacing:2px;margin-bottom:5px}.grade-value{font-family:'Bebas Neue',sans-serif;font-size:30px}.outlook-card{flex:1;background:#0b0f1a;border:1px solid #131c2e;border-radius:10px;padding:13px 15px}.outlook-label{font-size:9px;color:#2d3f55;letter-spacing:2px;margin-bottom:5px}.outlook-text{font-size:11px;color:#64748b;line-height:1.55}.legend{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}.legend-item{display:flex;align-items:center;gap:5px;font-size:9px;color:#2d3f55;letter-spacing:1px}.rec-card{border-radius:12px;overflow:hidden;margin-bottom:9px;animation:fadeUp .3s ease forwards;opacity:0}.rec-card:nth-child(1){animation-delay:.05s}.rec-card:nth-child(2){animation-delay:.1s}.rec-card:nth-child(3){animation-delay:.15s}.rec-card:nth-child(4){animation-delay:.2s}.rec-card:nth-child(5){animation-delay:.25s}.rec-card:nth-child(6){animation-delay:.3s}.rec-card:nth-child(7){animation-delay:.35s}.rec-card:nth-child(8){animation-delay:.4s}@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.rec-header{padding:10px 15px;display:flex;align-items:center;justify-content:space-between}.rec-decision{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px}.rec-name{font-size:13px;color:#e2e8f0;font-weight:500;margin-left:9px}.rec-conf{text-align:right}.conf-value{font-family:'Bebas Neue',sans-serif;font-size:19px;line-height:1}.conf-label{font-size:8px;color:#2d3f55;letter-spacing:1px}.rec-body{padding:12px 15px;background:#0b0f1a}.rec-headline{font-size:12px;color:#e2e8f0;font-weight:500;margin-bottom:6px;line-height:1.4}.rec-reasoning{font-size:11px;color:#64748b;line-height:1.65;margin-bottom:10px}.tags{display:flex;gap:6px;flex-wrap:wrap}.tag-key{background:#131c2e;border:1px solid #1e2d42;border-radius:5px;padding:4px 8px;font-size:10px;color:#00ff87}.tag-risk{background:rgba(255,214,10,.05);border:1px solid rgba(255,214,10,.2);border-radius:5px;padding:4px 8px;font-size:10px;color:#ffd60a}.accountability{background:#0b0f1a;border:1px solid #131c2e;border-radius:10px;padding:13px 17px;text-align:center;margin-top:14px}.acc-title{font-size:9px;color:#00ff87;letter-spacing:2px;margin-bottom:5px}.acc-text{font-size:10px;color:#2d3f55;letter-spacing:1px;line-height:1.6}.context-area{width:100%;background:#0b0f1a;border:1px solid #131c2e;border-radius:8px;padding:11px 13px;font-size:11px;color:#e2e8f0;line-height:1.5;font-family:'DM Mono',monospace;resize:none;outline:none;margin-top:8px}.context-area:focus{border-color:#00ff87}.hidden{display:none}</style></head><body><div class="header"><div><div class="logo">GRIDIRON<span>IQ</span></div><div class="subtitle">DYNASTY · PPR · 2026</div></div><div class="user-badge">@christiancap24</div></div><div class="container"><div id="view-roster"><div style="margin-bottom:18px"><div class="section-title">YOUR WIDE RECEIVERS</div><div class="section-sub">WEEK 1 · 2026 NFL SEASON</div></div><div id="error-box" class="error-box hidden"></div><div id="wr-list"></div><div class="group-label" style="margin-top:16px">ADD CONTEXT <span style="color:#1e2d42">(OPTIONAL)</span></div><textarea id="context-input" class="context-area" rows="3" placeholder="e.g. My opponent is weak at WR. Tyreek status unclear..."></textarea><button class="btn btn-primary" onclick="analyze(WRS)">ANALYZE ALL WRs</button><div class="btn-row"><button class="btn btn-secondary" id="btn-select" onclick="toggleSelectMode()">SELECT WRs</button><button class="btn btn-secondary" id="btn-analyze-selected" style="display:none" onclick="analyze(selected)">ANALYZE SELECTED</button></div></div><div id="view-analyzing" class="analyzing hidden"><div class="spinner"></div><div class="analyzing-title">RUNNING ANALYSIS</div><div class="analyzing-sub">EVALUATING MATCHUPS · CALCULATING CONFIDENCE</div></div><div id="view-results" class="hidden"><div class="narrative-card"><div class="narrative-label">THIS WEEK'S READ</div><div id="narrative-text" class="narrative-text"></div></div><div class="meta-row"><div class="grade-card"><div class="grade-label">GRADE</div><div id="grade-value" class="grade-value"></div></div><div class="outlook-card"><div class="outlook-label">DYNASTY OUTLOOK</div><div id="outlook-text" class="outlook-text"></div></div></div><div class="legend"><div class="legend-item"><span style="color:#00ff87">▲</span> START</div><div class="legend-item"><span style="color:#ffd60a">◆</span> FLEX</div><div class="legend-item"><span style="color:#ff4d6d">▼</span> SIT</div><div class="legend-item"><span style="color:#818cf8">●</span> STASH</div></div><div id="rec-list"></div><div class="btn-row"><button class="btn btn-secondary" onclick="showView('roster')">← ROSTER</button><button class="btn btn-secondary" onclick="analyze(WRS)">↻ RE-RUN</button></div><div class="accountability"><div class="acc-title">WE STAND BEHIND THESE CALLS</div><div class="acc-text">Check back Monday for your accountability report.<br/>We'll own what worked and what didn't.</div></div></div></div><script>
-const WORKER_URL='https://gridiron-iq-proxy.christiancap613-tech.workers.dev';
-const WRS=[{id:'w1',name:'A.J. Brown',team:'PHI',age:27,exp:6,status:'Starter',injury:null},{id:'w2',name:'George Pickens',team:'DAL',age:24,exp:3,status:'Starter',injury:null},{id:'w3',name:'Tyreek Hill',team:'MIA',age:31,exp:10,status:'Bench',injury:'QUES'},{id:'w4',name:'Isaiah Bond',team:'CLE',age:22,exp:1,status:'Bench',injury:null},{id:'w5',name:'Will Robinson',team:'TEN',age:26,exp:4,status:'Bench',injury:null},{id:'w6',name:'Rashid Shaheed',team:'SEA',age:26,exp:3,status:'Bench',injury:null},{id:'w7',name:'Parker Washington',team:'JAX',age:24,exp:2,status:'Bench',injury:null},{id:'w8',name:'Tez Johnson',team:'TEN',age:23,exp:1,status:'Taxi',injury:null}];
-const DC={START:{bg:'rgba(0,255,135,.08)',br:'rgba(0,255,135,.3)',tx:'#00ff87',ic:'▲'},FLEX:{bg:'rgba(255,214,10,.08)',br:'rgba(255,214,10,.3)',tx:'#ffd60a',ic:'◆'},SIT:{bg:'rgba(255,77,109,.08)',br:'rgba(255,77,109,.3)',tx:'#ff4d6d',ic:'▼'},STASH:{bg:'rgba(129,140,248,.08)',br:'rgba(129,140,248,.3)',tx:'#818cf8',ic:'●'}};
-let selectMode=false,selected=[];
-function init(){const groups=[{label:'STARTERS',wrs:WRS.filter(w=>w.status==='Starter')},{label:'BENCH',wrs:WRS.filter(w=>w.status==='Bench'&&!w.injury)},{label:'INJURED / QUESTIONABLE',wrs:WRS.filter(w=>w.injury)},{label:'TAXI SQUAD',wrs:WRS.filter(w=>w.status==='Taxi')}].filter(g=>g.wrs.length>0);document.getElementById('wr-list').innerHTML=groups.map(g=>`<div class="group-label">${g.label}</div>${g.wrs.map(wr=>`<div class="wr-card" id="card-${wr.id}" onclick="toggleCard('${wr.id}')"><div style="display:flex;align-items:center"><div class="avatar">${wr.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div><div class="wr-info"><div class="wr-name">${wr.name}</div><div class="wr-meta">${wr.team} · Age ${wr.age} · ${wr.exp===0?'Rookie':'Yr '+wr.exp}</div></div></div><div class="wr-right">${wr.injury?`<div class="inj-badge">${wr.injury}</div>`:''}<div class="status-dot" style="background:${wr.injury?'#ff4d6d':wr.status==='Starter'?'#00ff87':wr.status==='Taxi'?'#818cf8':'#2d3f55'}"></div></div></div>`).join('')}`).join('');}
-function toggleCard(id){if(!selectMode)return;const wr=WRS.find(w=>w.id===id);const idx=selected.findIndex(w=>w.id===id);if(idx>-1){selected.splice(idx,1);document.getElementById('card-'+id).classList.remove('selected')}else{selected.push(wr);document.getElementById('card-'+id).classList.add('selected')}document.getElementById('btn-analyze-selected').style.display=selected.length>0?'flex':'none';document.getElementById('btn-analyze-selected').textContent=`ANALYZE ${selected.length}`;}
-function toggleSelectMode(){selectMode=!selectMode;selected=[];document.getElementById('btn-select').textContent=selectMode?'CANCEL':'SELECT WRs';document.querySelectorAll('.wr-card').forEach(c=>c.classList.remove('selected'));document.getElementById('btn-analyze-selected').style.display='none';}
-function showView(v){['roster','analyzing','results'].forEach(n=>document.getElementById('view-'+n).classList.add('hidden'));document.getElementById('view-'+v).classList.remove('hidden');}
-function showError(msg){const el=document.getElementById('error-box');el.textContent=msg;el.classList.remove('hidden');}
-function confColor(c){return c>=80?'#00ff87':c>=65?'#ffd60a':'#ff4d6d';}
-function gradeColor(g){if(!g)return'#4a5568';const f=g[0];return f==='A'?'#00ff87':f==='B'?'#ffd60a':f==='C'?'#fb923c':'#ff4d6d';}
-async function analyze(wrs){document.getElementById('error-box').classList.add('hidden');showView('analyzing');const ctx=document.getElementById('context-input').value;const prompt=`Analyze these WRs for dynasty PPR fantasy football Week 1 2026. Return ONLY valid JSON, no markdown.\n\n${wrs.map(w=>`${w.name} (${w.team}, Age ${w.age}, ${w.exp===0?'Rookie':'Yr '+w.exp}, ${w.status}${w.injury?', '+w.injury:''}) `).join('\n')}${ctx?'\n\nManager context: '+ctx:''}`;const system=`You are GridironIQ, a direct dynasty PPR fantasy analyst. Respond ONLY with valid JSON, no markdown fences, no text outside the object: {"week_narrative":"2-3 sentences","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2-3 sentences","key_factor":"one stat or factor","risk":null}],"dynasty_insight":"one sentence"}`;
-try{const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1000,system,messages:[{role:'user',content:prompt}]})});const raw=await res.text();let d;try{d=JSON.parse(raw)}catch(e){throw new Error('Bad response: '+raw.slice(0,200))}if(!res.ok||d.type==='error')throw new Error(d.error?.message||'HTTP '+res.status);const txt=d.content?.find(b=>b.type==='text')?.text||'';const match=txt.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);if(!match)throw new Error('No JSON: '+txt.slice(0,200));const data=JSON.parse(match[0]);renderResults(data);showView('results')}catch(e){showView('roster');showError('Analysis failed: '+e.message);}}
-function renderResults(data){document.getElementById('narrative-text').textContent=data.week_narrative||'';const grade=(data.roster_grade||'').split(' ')[0];const gv=document.getElementById('grade-value');gv.textContent=grade;gv.style.color=gradeColor(grade);document.getElementById('outlook-text').textContent=data.dynasty_insight||'';document.getElementById('rec-list').innerHTML=(data.recommendations||[]).map(rec=>{const cfg=DC[rec.decision]||DC.SIT;return`<div class="rec-card" style="border:1px solid ${cfg.br}"><div class="rec-header" style="background:${cfg.bg};border-bottom:1px solid ${cfg.br}"><div style="display:flex;align-items:center"><span style="color:${cfg.tx};font-size:11px">${cfg.ic}</span><span class="rec-decision" style="color:${cfg.tx};margin-left:8px">${rec.decision}</span><span class="rec-name">${rec.player_name}</span></div><div class="rec-conf"><div class="conf-value" style="color:${confColor(rec.confidence)}">${rec.confidence}<span style="font-size:9px">%</span></div><div class="conf-label">CONF</div></div></div><div class="rec-body"><div class="rec-headline">${rec.headline}</div><div class="rec-reasoning">${rec.reasoning}</div><div class="tags"><div class="tag-key">◎ ${rec.key_factor}</div>${rec.risk&&rec.risk!=='null'?`<div class="tag-risk">⚠ ${rec.risk}</div>`:''}</div></div></div>`;}).join('');}
-init();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GridironIQ</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── THEME TOKENS ───────────────────────────────────────── */
+    :root {
+      --bg:          #000000;
+      --bg-card:     #0d0d0d;
+      --bg-card-2:   #161616;
+      --border:      #222222;
+      --text-1:      #ffffff;
+      --text-2:      #9ca3af;
+      --text-3:      #4b5563;
+      --start:       #00ff87;
+      --flex:        #fbbf24;
+      --sit:         #ff4d6d;
+      --stash:       #a855f7;
+      --accent:      #00ff87;
+    }
+    [data-theme="light"] {
+      --bg:          #ffffff;
+      --bg-card:     #f9fafb;
+      --bg-card-2:   #f3f4f6;
+      --border:      #e5e7eb;
+      --text-1:      #111827;
+      --text-2:      #6b7280;
+      --text-3:      #9ca3af;
+      --start:       #059669;
+      --flex:        #d97706;
+      --sit:         #dc2626;
+      --stash:       #7c3aed;
+      --accent:      #059669;
+    }
+
+    /* ── RESET & BASE ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-1);
+      font-family: 'DM Mono', 'Courier New', monospace;
+      min-height: 100vh;
+      padding-bottom: 70px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* ── CARD BASE ──────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────────── */
+    .header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 13px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 3px;
+      color: var(--text-1);
+      line-height: 1;
+      transition: color 0.3s ease;
+    }
+    .logo span { color: var(--accent); transition: color 0.3s ease; }
+    .logo-sub {
+      font-size: 8px;
+      color: var(--text-3);
+      letter-spacing: 2.5px;
+      margin-top: 2px;
+      transition: color 0.3s ease;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Theme toggle pill */
+    .theme-toggle {
+      width: 46px;
+      height: 26px;
+      border-radius: 13px;
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      position: relative;
+      cursor: pointer;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+      flex-shrink: 0;
+    }
+    .toggle-knob {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      top: 2px;
+      left: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      line-height: 1;
+      transition: transform 0.3s ease, background-color 0.3s ease;
+    }
+    [data-theme="light"] .toggle-knob { transform: translateX(20px); }
+
+    .user-badge {
+      font-size: 10px;
+      color: var(--text-3);
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    /* ── CONTAINER ──────────────────────────────────────────── */
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 16px 14px 24px;
+    }
+
+    /* ── VIEWS ──────────────────────────────────────────────── */
+    .view { display: flex; flex-direction: column; gap: 10px; }
+    .hidden { display: none !important; }
+
+    /* ── PAGE HEADER CARD ───────────────────────────────────── */
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 2px;
+      color: var(--text-1);
+      transition: color 0.3s ease;
+    }
+    .section-sub {
+      font-size: 9px;
+      color: var(--text-3);
+      letter-spacing: 1.5px;
+      margin-top: 4px;
+      transition: color 0.3s ease;
+    }
+
+    /* ── ERROR CARD ─────────────────────────────────────────── */
+    .error-card {
+      background: rgba(255,77,109,0.06);
+      border-color: rgba(255,77,109,0.25);
+      font-size: 11px;
+      color: var(--sit);
+      word-break: break-word;
+    }
+
+    /* ── GROUP LABELS ───────────────────────────────────────── */
+    .group-label {
+      font-size: 9px;
+      color: var(--text-3);
+      letter-spacing: 2px;
+      padding: 4px 2px 6px;
+      transition: color 0.3s ease;
+    }
+
+    /* ── WR CARDS ───────────────────────────────────────────── */
+    .wr-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 13px 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.15s ease;
+    }
+    .wr-card:hover { transform: translateY(-1px); }
+    .wr-card.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, var(--bg-card)); }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    .wr-info { flex: 1; min-width: 0; }
+    .wr-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.3s ease;
+    }
+    .wr-meta {
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 3px;
+      transition: color 0.3s ease;
+    }
+    .wr-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .inj-badge {
+      font-size: 9px;
+      color: var(--sit);
+      background: color-mix(in srgb, var(--sit) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--sit) 25%, transparent);
+      padding: 3px 7px;
+      border-radius: 5px;
+      letter-spacing: 0.5px;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── CONTEXT CARD ───────────────────────────────────────── */
+    .context-label {
+      font-size: 9px;
+      color: var(--text-3);
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      transition: color 0.3s ease;
+    }
+    .context-label span { color: var(--border); }
+    .context-area {
+      width: 100%;
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 13px;
+      font-size: 11px;
+      color: var(--text-1);
+      line-height: 1.5;
+      font-family: 'DM Mono', monospace;
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+    .context-area::placeholder { color: var(--text-3); }
+    .context-area:focus { border-color: var(--accent); }
+
+    /* ── BUTTONS ────────────────────────────────────────────── */
+    .btn {
+      cursor: pointer;
+      border: none;
+      font-family: 'DM Mono', monospace;
+      border-radius: 10px;
+      transition: opacity 0.15s ease, transform 0.15s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      width: 100%;
+      padding: 15px;
+      background: var(--accent);
+      color: var(--bg);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 15px;
+      letter-spacing: 2.5px;
+      border-radius: 12px;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+
+    .btn-secondary {
+      flex: 1;
+      padding: 11px;
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      font-family: 'Bebas Neue', sans-serif;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-row { display: flex; gap: 8px; }
+
+    /* ── ANALYZING VIEW ─────────────────────────────────────── */
+    .analyzing-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 72px 20px;
+      gap: 16px;
+    }
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      transition: border-color 0.3s ease;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .analyzing-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 3px;
+      color: var(--text-1);
+    }
+    .analyzing-sub {
+      font-size: 9px;
+      color: var(--text-3);
+      letter-spacing: 2px;
+      animation: pulse 1.8s ease infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* ── NARRATIVE CARD ─────────────────────────────────────── */
+    .narrative-card { border-left: 3px solid var(--accent); }
+    .narrative-label {
+      font-size: 9px;
+      color: var(--accent);
+      letter-spacing: 2px;
+      margin-bottom: 9px;
+      transition: color 0.3s ease;
+    }
+    .narrative-text {
+      font-size: 12px;
+      color: var(--text-2);
+      line-height: 1.7;
+      transition: color 0.3s ease;
+    }
+
+    /* ── GRADE + OUTLOOK ROW ────────────────────────────────── */
+    .meta-row { display: flex; gap: 10px; }
+    .grade-card { text-align: center; flex-shrink: 0; min-width: 88px; }
+    .outlook-card { flex: 1; }
+    .meta-label {
+      font-size: 9px;
+      color: var(--text-3);
+      letter-spacing: 2px;
+      margin-bottom: 7px;
+      transition: color 0.3s ease;
+    }
+    .grade-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 38px;
+      line-height: 1;
+      transition: color 0.3s ease;
+    }
+    .outlook-text {
+      font-size: 11px;
+      color: var(--text-2);
+      line-height: 1.6;
+      transition: color 0.3s ease;
+    }
+
+    /* ── LEGEND ─────────────────────────────────────────────── */
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      color: var(--text-3);
+      letter-spacing: 1px;
+      transition: color 0.3s ease;
+    }
+
+    /* ── REC CARDS ──────────────────────────────────────────── */
+    .rec-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      animation: fadeUp 0.3s ease forwards;
+      opacity: 0;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .rec-card:nth-child(1) { animation-delay: 0.04s; }
+    .rec-card:nth-child(2) { animation-delay: 0.09s; }
+    .rec-card:nth-child(3) { animation-delay: 0.14s; }
+    .rec-card:nth-child(4) { animation-delay: 0.19s; }
+    .rec-card:nth-child(5) { animation-delay: 0.24s; }
+    .rec-card:nth-child(6) { animation-delay: 0.29s; }
+    .rec-card:nth-child(7) { animation-delay: 0.34s; }
+    .rec-card:nth-child(8) { animation-delay: 0.39s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Decision-specific left border accent */
+    .dec-start { border-left: 3px solid var(--start); }
+    .dec-flex  { border-left: 3px solid var(--flex);  }
+    .dec-sit   { border-left: 3px solid var(--sit);   }
+    .dec-stash { border-left: 3px solid var(--stash); }
+
+    .rec-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      transition: border-color 0.3s ease;
+    }
+    .rec-header-left { display: flex; align-items: center; gap: 9px; }
+
+    .decision-badge {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+    .dec-start .decision-badge { color: var(--start); background: color-mix(in srgb, var(--start) 12%, transparent); }
+    .dec-flex  .decision-badge { color: var(--flex);  background: color-mix(in srgb, var(--flex)  12%, transparent); }
+    .dec-sit   .decision-badge { color: var(--sit);   background: color-mix(in srgb, var(--sit)   12%, transparent); }
+    .dec-stash .decision-badge { color: var(--stash); background: color-mix(in srgb, var(--stash) 12%, transparent); }
+
+    .rec-player { font-size: 13px; font-weight: 500; color: var(--text-1); transition: color 0.3s ease; }
+
+    /* Confidence */
+    .rec-conf { text-align: right; }
+    .conf-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      line-height: 1;
+      transition: color 0.3s ease;
+    }
+    .conf-pct { font-size: 9px; color: var(--text-3); }
+    .conf-bar-track {
+      width: 60px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 5px;
+      overflow: hidden;
+      transition: background-color 0.3s ease;
+    }
+    .conf-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.6s ease, background-color 0.3s ease;
+    }
+    /* confidence colour classes */
+    .conf-high { color: var(--start); }
+    .conf-mid  { color: var(--flex);  }
+    .conf-low  { color: var(--sit);   }
+    .bar-high  { background: var(--start); }
+    .bar-mid   { background: var(--flex);  }
+    .bar-low   { background: var(--sit);   }
+
+    /* Rec body */
+    .rec-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; }
+    .rec-headline {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-1);
+      line-height: 1.4;
+      transition: color 0.3s ease;
+    }
+    .rec-reasoning {
+      font-size: 11px;
+      color: var(--text-2);
+      line-height: 1.7;
+      transition: color 0.3s ease;
+    }
+    .tags { display: flex; gap: 7px; flex-wrap: wrap; }
+    .tag {
+      font-size: 10px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+    }
+    .tag-key {
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    }
+    .tag-risk {
+      color: var(--flex);
+      background: color-mix(in srgb, var(--flex) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--flex) 20%, transparent);
+    }
+
+    /* ── ACCOUNTABILITY ─────────────────────────────────────── */
+    .accountability { text-align: center; }
+    .acc-title {
+      font-size: 9px;
+      color: var(--accent);
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+      transition: color 0.3s ease;
+    }
+    .acc-text {
+      font-size: 10px;
+      color: var(--text-3);
+      letter-spacing: 0.5px;
+      line-height: 1.7;
+      transition: color 0.3s ease;
+    }
+
+    /* ── BOTTOM NAV ─────────────────────────────────────────── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      height: 62px;
+      z-index: 50;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .nav-tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--text-3);
+      cursor: not-allowed;
+      transition: color 0.2s ease;
+    }
+    .nav-tab.active { color: var(--accent); cursor: pointer; }
+    .nav-icon { font-size: 15px; line-height: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ──────────────────────────────────────────────── -->
+  <header class="header">
+    <div>
+      <div class="logo">GRIDIRON<span>IQ</span></div>
+      <div class="logo-sub">DYNASTY · PPR · 2026</div>
+    </div>
+    <div class="header-right">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light / dark">
+        <div class="toggle-knob">☀</div>
+      </button>
+      <div class="user-badge">@christiancap24</div>
+    </div>
+  </header>
+
+  <!-- ── MAIN ────────────────────────────────────────────────── -->
+  <main>
+    <div class="container">
+
+      <!-- VIEW: ROSTER -->
+      <div id="view-roster" class="view">
+
+        <div class="card">
+          <div class="section-title">YOUR WIDE RECEIVERS</div>
+          <div class="section-sub">WEEK 1 · 2026 NFL SEASON</div>
+        </div>
+
+        <div id="error-box" class="card error-card hidden"></div>
+
+        <div id="wr-list"></div>
+
+        <div class="card">
+          <div class="context-label">ADD CONTEXT <span>(OPTIONAL)</span></div>
+          <textarea id="context-input" class="context-area" rows="3"
+            placeholder="e.g. My opponent is weak at WR. Tyreek status unclear..."></textarea>
+        </div>
+
+        <button class="btn btn-primary" onclick="analyze(WRS)">ANALYZE ALL WRs</button>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" id="btn-select" onclick="toggleSelectMode()">SELECT WRs</button>
+          <button class="btn btn-secondary" id="btn-analyze-selected"
+            style="display:none" onclick="analyze(selected)">ANALYZE SELECTED</button>
+        </div>
+
+      </div>
+
+      <!-- VIEW: ANALYZING -->
+      <div id="view-analyzing" class="hidden">
+        <div class="analyzing-wrap">
+          <div class="spinner"></div>
+          <div class="analyzing-title">RUNNING ANALYSIS</div>
+          <div class="analyzing-sub">EVALUATING MATCHUPS · CALCULATING CONFIDENCE</div>
+        </div>
+      </div>
+
+      <!-- VIEW: RESULTS -->
+      <div id="view-results" class="view hidden">
+
+        <div class="card narrative-card">
+          <div class="narrative-label">THIS WEEK'S READ</div>
+          <div id="narrative-text" class="narrative-text"></div>
+        </div>
+
+        <div class="meta-row">
+          <div class="card grade-card">
+            <div class="meta-label">GRADE</div>
+            <div id="grade-value" class="grade-value"></div>
+          </div>
+          <div class="card outlook-card">
+            <div class="meta-label">DYNASTY OUTLOOK</div>
+            <div id="outlook-text" class="outlook-text"></div>
+          </div>
+        </div>
+
+        <div class="card legend">
+          <div class="legend-item"><span style="color:var(--start)">▲</span> START</div>
+          <div class="legend-item"><span style="color:var(--flex)">◆</span> FLEX</div>
+          <div class="legend-item"><span style="color:var(--sit)">▼</span> SIT</div>
+          <div class="legend-item"><span style="color:var(--stash)">●</span> STASH</div>
+        </div>
+
+        <div id="rec-list"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="showView('roster')">← ROSTER</button>
+          <button class="btn btn-secondary" onclick="analyze(WRS)">↻ RE-RUN</button>
+        </div>
+
+        <div class="card accountability">
+          <div class="acc-title">WE STAND BEHIND THESE CALLS</div>
+          <div class="acc-text">Check back Monday for your accountability report.<br/>We'll own what worked and what didn't.</div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ── BOTTOM NAV ───────────────────────────────────────────── -->
+  <nav class="bottom-nav">
+    <button class="nav-tab active">
+      <span class="nav-icon">↔</span>WR
+    </button>
+    <button class="nav-tab">
+      <span class="nav-icon">◈</span>RB
+    </button>
+    <button class="nav-tab">
+      <span class="nav-icon">◎</span>QB
+    </button>
+    <button class="nav-tab">
+      <span class="nav-icon">⊞</span>MATCHUP
+    </button>
+  </nav>
+
+  <script>
+    const WORKER_URL = 'https://gridiron-iq-proxy.christiancap613-tech.workers.dev';
+
+    const WRS = [
+      { id:'w1', name:'A.J. Brown',          team:'PHI', age:27, exp:6,  status:'Starter', injury:null   },
+      { id:'w2', name:'George Pickens',       team:'DAL', age:24, exp:3,  status:'Starter', injury:null   },
+      { id:'w3', name:'Tyreek Hill',          team:'MIA', age:31, exp:10, status:'Bench',   injury:'QUES' },
+      { id:'w4', name:'Isaiah Bond',          team:'CLE', age:22, exp:1,  status:'Bench',   injury:null   },
+      { id:'w5', name:'Will Robinson',        team:'TEN', age:26, exp:4,  status:'Bench',   injury:null   },
+      { id:'w6', name:'Rashid Shaheed',       team:'SEA', age:26, exp:3,  status:'Bench',   injury:null   },
+      { id:'w7', name:'Parker Washington',    team:'JAX', age:24, exp:2,  status:'Bench',   injury:null   },
+      { id:'w8', name:'Tez Johnson',          team:'TEN', age:23, exp:1,  status:'Taxi',    injury:null   },
+    ];
+
+    let selectMode = false, selected = [];
+
+    // ── THEME ──────────────────────────────────────────────────
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      document.querySelector('.toggle-knob').textContent = next === 'dark' ? '☀' : '🌙';
+    }
+
+    // ── ROSTER INIT ────────────────────────────────────────────
+    function init() {
+      const groups = [
+        { label: 'STARTERS',               wrs: WRS.filter(w => w.status === 'Starter') },
+        { label: 'BENCH',                  wrs: WRS.filter(w => w.status === 'Bench' && !w.injury) },
+        { label: 'INJURED / QUESTIONABLE', wrs: WRS.filter(w => w.injury) },
+        { label: 'TAXI SQUAD',             wrs: WRS.filter(w => w.status === 'Taxi') },
+      ].filter(g => g.wrs.length > 0);
+
+      document.getElementById('wr-list').innerHTML = groups.map(g => `
+        <div class="group-label">${g.label}</div>
+        ${g.wrs.map(wr => {
+          const dotColor = wr.injury           ? 'var(--sit)'
+                         : wr.status==='Starter' ? 'var(--start)'
+                         : wr.status==='Taxi'    ? 'var(--stash)'
+                         :                         'var(--text-3)';
+          return `
+            <div class="wr-card" id="card-${wr.id}" onclick="toggleCard('${wr.id}')">
+              <div class="avatar">${wr.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+              <div class="wr-info">
+                <div class="wr-name">${wr.name}</div>
+                <div class="wr-meta">${wr.team} · Age ${wr.age} · ${wr.exp===0?'Rookie':'Yr '+wr.exp}</div>
+              </div>
+              <div class="wr-right">
+                ${wr.injury ? `<div class="inj-badge">${wr.injury}</div>` : ''}
+                <div class="status-dot" style="background:${dotColor}"></div>
+              </div>
+            </div>`;
+        }).join('')}
+      `).join('');
+    }
+
+    function toggleCard(id) {
+      if (!selectMode) return;
+      const wr  = WRS.find(w => w.id === id);
+      const idx = selected.findIndex(w => w.id === id);
+      if (idx > -1) { selected.splice(idx, 1); document.getElementById('card-'+id).classList.remove('selected'); }
+      else          { selected.push(wr);        document.getElementById('card-'+id).classList.add('selected');    }
+      const btn = document.getElementById('btn-analyze-selected');
+      btn.style.display = selected.length > 0 ? 'flex' : 'none';
+      btn.textContent   = `ANALYZE ${selected.length}`;
+    }
+
+    function toggleSelectMode() {
+      selectMode = !selectMode;
+      selected   = [];
+      document.getElementById('btn-select').textContent = selectMode ? 'CANCEL' : 'SELECT WRs';
+      document.querySelectorAll('.wr-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('btn-analyze-selected').style.display = 'none';
+    }
+
+    function showView(v) {
+      ['roster','analyzing','results'].forEach(n =>
+        document.getElementById('view-'+n).classList.add('hidden')
+      );
+      document.getElementById('view-'+v).classList.remove('hidden');
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-box');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    function confTier(c) { return c >= 80 ? 'high' : c >= 65 ? 'mid' : 'low'; }
+
+    function gradeColor(g) {
+      if (!g) return 'var(--text-3)';
+      const f = g[0];
+      return f==='A' ? 'var(--start)' : f==='B' ? 'var(--flex)' : f==='C' ? '#fb923c' : 'var(--sit)';
+    }
+
+    // ── ANALYZE ───────────────────────────────────────────────
+    async function analyze(wrs) {
+      document.getElementById('error-box').classList.add('hidden');
+      showView('analyzing');
+
+      const ctx    = document.getElementById('context-input').value;
+      const prompt = `Analyze these WRs for dynasty PPR fantasy football Week 1 2026. Return ONLY valid JSON, no markdown.\n\n`
+        + wrs.map(w => `${w.name} (${w.team}, Age ${w.age}, ${w.exp===0?'Rookie':'Yr '+w.exp}, ${w.status}${w.injury?', '+w.injury:''})`).join('\n')
+        + (ctx ? '\n\nManager context: '+ctx : '');
+
+      const system = `You are GridironIQ, a direct dynasty PPR fantasy analyst. Respond ONLY with valid JSON, no markdown fences, no text outside the object: {"week_narrative":"2-3 sentences","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2-3 sentences","key_factor":"one stat or factor","risk":null}],"dynasty_insight":"one sentence"}`;
+
+      try {
+        const res = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:1000, system, messages:[{ role:'user', content:prompt }] }),
+        });
+        const raw = await res.text();
+        let d;
+        try { d = JSON.parse(raw); } catch(e) { throw new Error('Bad response: '+raw.slice(0,200)); }
+        if (!res.ok || d.type==='error') throw new Error(d.error?.message || 'HTTP '+res.status);
+        const txt   = d.content?.find(b => b.type==='text')?.text || '';
+        const match = txt.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+        if (!match) throw new Error('No JSON in response: '+txt.slice(0,200));
+        renderResults(JSON.parse(match[0]));
+        showView('results');
+      } catch(e) {
+        showView('roster');
+        showError('Analysis failed: '+e.message);
+      }
+    }
+
+    // ── RENDER RESULTS ─────────────────────────────────────────
+    function renderResults(data) {
+      document.getElementById('narrative-text').textContent = data.week_narrative || '';
+
+      const grade = (data.roster_grade || '').split(' ')[0];
+      const gv = document.getElementById('grade-value');
+      gv.textContent   = grade;
+      gv.style.color   = gradeColor(grade);
+
+      document.getElementById('outlook-text').textContent = data.dynasty_insight || '';
+
+      const icons = { START:'▲', FLEX:'◆', SIT:'▼', STASH:'●' };
+
+      document.getElementById('rec-list').innerHTML = (data.recommendations || []).map(rec => {
+        const dec  = (rec.decision || 'SIT').toUpperCase();
+        const cls  = dec.toLowerCase();
+        const conf = rec.confidence || 0;
+        const tier = confTier(conf);
+        return `
+          <div class="rec-card dec-${cls}">
+            <div class="rec-header">
+              <div class="rec-header-left">
+                <span class="decision-badge">${icons[dec]||''} ${dec}</span>
+                <span class="rec-player">${rec.player_name}</span>
+              </div>
+              <div class="rec-conf">
+                <div class="conf-num conf-${tier}">${conf}<span class="conf-pct">%</span></div>
+                <div class="conf-bar-track">
+                  <div class="conf-bar-fill bar-${tier}" style="width:${conf}%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="rec-body">
+              <div class="rec-headline">${rec.headline || ''}</div>
+              <div class="rec-reasoning">${rec.reasoning || ''}</div>
+              <div class="tags">
+                ${rec.key_factor                           ? `<div class="tag tag-key">◎ ${rec.key_factor}</div>`  : ''}
+                ${rec.risk && rec.risk !== 'null' ? `<div class="tag tag-risk">⚠ ${rec.risk}</div>` : ''}
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    init();
+  </script>
+</body>
+</html>
