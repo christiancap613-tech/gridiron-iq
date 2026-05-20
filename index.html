@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GridironIQ</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet"/>
   <style>
     /* ── THEME TOKENS ───────────────────────────────────────── */
     :root {
@@ -42,7 +42,7 @@
     body {
       background: var(--bg);
       color: var(--text-1);
-      font-family: 'DM Mono', 'Courier New', monospace;
+      font-family: 'Inter', sans-serif;
       min-height: 100vh;
       padding-bottom: 70px;
       transition: background-color 0.3s ease, color 0.3s ease;
@@ -253,7 +253,7 @@
       font-size: 11px;
       color: var(--text-1);
       line-height: 1.5;
-      font-family: 'DM Mono', monospace;
+      font-family: 'Inter', sans-serif;
       resize: none;
       outline: none;
       transition: border-color 0.2s ease, background-color 0.3s ease, color 0.3s ease;
@@ -422,9 +422,9 @@
     .rec-header-left { display: flex; align-items: center; gap: 9px; }
 
     .decision-badge {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 11px;
-      letter-spacing: 1.5px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
       padding: 3px 8px;
       border-radius: 5px;
       transition: all 0.3s ease;
@@ -447,16 +447,16 @@
     .conf-pct { font-size: 9px; color: var(--text-3); }
     .conf-bar-track {
       width: 60px;
-      height: 4px;
+      height: 6px;
       background: var(--border);
-      border-radius: 2px;
+      border-radius: 3px;
       margin-top: 5px;
       overflow: hidden;
       transition: background-color 0.3s ease;
     }
     .conf-bar-fill {
       height: 100%;
-      border-radius: 2px;
+      border-radius: 3px;
       transition: width 0.6s ease, background-color 0.3s ease;
     }
     /* confidence colour classes */
@@ -477,7 +477,7 @@
       transition: color 0.3s ease;
     }
     .rec-reasoning {
-      font-size: 11px;
+      font-size: 13px;
       color: var(--text-2);
       line-height: 1.7;
       transition: color 0.3s ease;
@@ -485,7 +485,7 @@
     .tags { display: flex; gap: 7px; flex-wrap: wrap; }
     .tag {
       font-size: 10px;
-      padding: 4px 9px;
+      padding: 6px 13px;
       border-radius: 6px;
       transition: all 0.3s ease;
     }
