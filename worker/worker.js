@@ -14,6 +14,14 @@ export default {
       return new Response('Method not allowed', { status: 405 });
     }
 
+    const apiKey = (env.ANTHROPIC_KEY || '').trim();
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ error: { message: 'ANTHROPIC_KEY secret is not set on the worker' } }),
+        { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      );
+    }
+
     let body;
     try {
       body = await request.json();
@@ -25,7 +33,7 @@ export default {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': env.ANTHROPIC_KEY,
+        'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify(body),
