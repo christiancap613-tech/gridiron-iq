@@ -663,8 +663,100 @@
       transition: color 0.2s ease;
     }
     .nav-tab.active { color: var(--accent); cursor: pointer; }
-    #tab-wr, #tab-rb { cursor: pointer; }
+    #tab-wr, #tab-rb, #tab-report { cursor: pointer; }
     .nav-icon { font-size: 15px; line-height: 1; }
+
+    /* ── REPORT VIEW ────────────────────────────────────────── */
+    .report-acc-pct {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      line-height: 1;
+      margin: 8px 0 4px;
+      transition: color 0.3s ease;
+    }
+    .report-acc-stmt {
+      font-size: 12px;
+      color: var(--text-2);
+      line-height: 1.6;
+      transition: color 0.3s ease;
+    }
+    .report-empty {
+      font-size: 12px;
+      color: var(--text-3);
+      line-height: 1.7;
+      transition: color 0.3s ease;
+    }
+    .week-header {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--text-3);
+      padding: 4px 2px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: color 0.3s ease;
+    }
+    .week-tally { font-size: 9px; letter-spacing: 1px; }
+    .report-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .rcard-top {
+      padding: 12px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .rcard-left { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; }
+    .rcard-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.3s ease;
+    }
+    .rcard-meta { font-size: 10px; color: var(--text-3); margin-top: 2px; transition: color 0.3s ease; }
+    .rcard-grade {
+      padding: 0 12px 12px;
+      display: flex;
+      gap: 8px;
+    }
+    .grade-btn {
+      flex: 1;
+      padding: 9px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card-2);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text-3);
+    }
+    .grade-correct:hover { border-color: var(--start); color: var(--start);
+      background: color-mix(in srgb, var(--start) 8%, transparent); }
+    .grade-wrong:hover   { border-color: var(--sit);   color: var(--sit);
+      background: color-mix(in srgb, var(--sit)   8%, transparent); }
+    .grade-active-correct {
+      border-color: var(--start) !important;
+      color: var(--start) !important;
+      background: color-mix(in srgb, var(--start) 12%, transparent) !important;
+    }
+    .grade-active-wrong {
+      border-color: var(--sit) !important;
+      color: var(--sit) !important;
+      background: color-mix(in srgb, var(--sit) 12%, transparent) !important;
+    }
+    .grade-inactive { opacity: 0.28; }
+    .report-loading { display: flex; justify-content: center; padding: 12px 0; }
   </style>
 </head>
 <body>
@@ -797,9 +889,15 @@
 
         <div class="card accountability">
           <div class="acc-title">WE STAND BEHIND THESE CALLS</div>
-          <div class="acc-text">Check back Monday for your accountability report.<br/>We'll own what worked and what didn't.</div>
+          <div class="acc-text">Head to the REPORT tab to grade this week's calls and track your season accuracy.</div>
         </div>
 
+      </div>
+
+      <!-- VIEW: REPORT ────────────────────────────────────────── -->
+      <div id="view-report" class="view hidden">
+        <div id="report-accuracy-card" class="card narrative-card"></div>
+        <div id="report-body"></div>
       </div>
 
     </div>
@@ -810,7 +908,7 @@
     <button id="tab-wr" class="nav-tab active" onclick="switchPosition('WR')"><span class="nav-icon">↔</span>WR</button>
     <button id="tab-rb" class="nav-tab" onclick="switchPosition('RB')"><span class="nav-icon">◈</span>RB</button>
     <button class="nav-tab"><span class="nav-icon">◎</span>QB</button>
-    <button class="nav-tab"><span class="nav-icon">⊞</span>MATCHUP</button>
+    <button id="tab-report" class="nav-tab" onclick="showReport()"><span class="nav-icon">◎</span>REPORT</button>
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -834,6 +932,7 @@
     let currentPosition = 'WR'; // active tab: 'WR' | 'RB'
     let selectMode     = false;
     let selected       = [];
+    let reportData     = { recs: [], outcomes: [] };
 
     /* ── THEME ──────────────────────────────────────────────── */
     function toggleTheme() {
@@ -845,7 +944,7 @@
 
     /* ── VIEW ROUTER ────────────────────────────────────────── */
     function showView(v) {
-      ['username','loading','leagues','roster','analyzing','results'].forEach(n =>
+      ['username','loading','leagues','roster','analyzing','results','report'].forEach(n =>
         document.getElementById('view-' + n).classList.add('hidden')
       );
       document.getElementById('view-' + v).classList.remove('hidden');
@@ -1186,6 +1285,7 @@
 
       document.getElementById('tab-wr').classList.toggle('active', pos === 'WR');
       document.getElementById('tab-rb').classList.toggle('active', pos === 'RB');
+      document.getElementById('tab-report').classList.remove('active');
 
       const label = pos === 'WR' ? 'YOUR WIDE RECEIVERS' : 'YOUR RUNNING BACKS';
       document.getElementById('roster-title').textContent  = label;
@@ -1222,6 +1322,194 @@
         selectMode ? 'CANCEL' : `SELECT ${currentPosition}s`;
       document.querySelectorAll('.wr-card').forEach(c => c.classList.remove('selected'));
       document.getElementById('btn-analyze-selected').style.display = 'none';
+    }
+
+    /* ── REPORT TAB ─────────────────────────────────────────── */
+    async function showReport() {
+      document.getElementById('tab-wr').classList.remove('active');
+      document.getElementById('tab-rb').classList.remove('active');
+      document.getElementById('tab-report').classList.add('active');
+      showView('report');
+
+      if (!currentLeague) {
+        document.getElementById('report-accuracy-card').innerHTML =
+          `<div class="narrative-label">ACCOUNTABILITY REPORT</div>
+           <div class="narrative-text report-empty">Connect a Sleeper league to view your report.</div>`;
+        document.getElementById('report-body').innerHTML = '';
+        return;
+      }
+      await loadReport();
+    }
+
+    async function loadReport() {
+      document.getElementById('report-accuracy-card').innerHTML =
+        `<div class="report-loading"><div class="spinner" style="width:24px;height:24px;border-width:2px;margin:0 auto"></div></div>`;
+      document.getElementById('report-body').innerHTML = '';
+
+      try {
+        // All recs for this user/league this season
+        const { data: recs, error: e1 } = await sb
+          .from('recommendations')
+          .select('*')
+          .eq('sleeper_username', sleeperUser.username)
+          .eq('league_id', currentLeague.league_id)
+          .eq('season', 2026)
+          .order('week', { ascending: false })
+          .order('created_at', { ascending: false });
+        if (e1) throw e1;
+
+        const allRecs = recs || [];
+        const recIds  = allRecs.map(r => r.id);
+
+        let outcomes = [];
+        if (recIds.length) {
+          const { data: outData, error: e2 } = await sb
+            .from('outcomes').select('*').in('recommendation_id', recIds);
+          if (e2) throw e2;
+          outcomes = outData || [];
+        }
+
+        reportData = { recs: allRecs, outcomes };
+        renderAccuracy();
+        renderReport();
+
+      } catch (e) {
+        document.getElementById('report-accuracy-card').innerHTML =
+          `<div class="card error-card">${escHtml(e.message)}</div>`;
+      }
+    }
+
+    function renderAccuracy() {
+      const el      = document.getElementById('report-accuracy-card');
+      const total   = reportData.recs.length;
+      const graded  = reportData.outcomes.length;
+      const correct = reportData.outcomes.filter(o => o.decision_correct).length;
+      const pct     = graded > 0 ? Math.round(correct / graded * 100) : null;
+      const pctColor = pct === null ? 'var(--text-3)'
+        : pct >= 70 ? 'var(--start)' : pct >= 50 ? 'var(--flex)' : 'var(--sit)';
+
+      if (total === 0) {
+        el.innerHTML = `
+          <div class="narrative-label">ACCOUNTABILITY REPORT</div>
+          <div class="narrative-text report-empty">No analysis history for this league yet.<br>Run an analysis to start tracking.</div>`;
+        return;
+      }
+
+      const ungraded = total - graded;
+      const statement = graded === 0
+        ? `${total} call${total !== 1 ? 's' : ''} made — tap ✓ or ✗ below to grade them`
+        : `${correct} of ${graded} call${graded !== 1 ? 's' : ''} correct this season${ungraded > 0 ? ` · ${ungraded} ungraded` : ''}`;
+
+      el.innerHTML = `
+        <div class="narrative-label">ACCURACY THIS SEASON</div>
+        <div class="report-acc-pct" style="color:${pctColor}">${pct !== null ? pct + '%' : '—'}</div>
+        <div class="report-acc-stmt">${escHtml(statement)}</div>`;
+    }
+
+    function renderReport() {
+      const weeks = [...new Set(reportData.recs.map(r => r.week))]
+        .sort((a, b) => b - a).slice(0, 2);
+
+      if (weeks.length === 0) {
+        document.getElementById('report-body').innerHTML = '';
+        return;
+      }
+
+      const icons = { START: '▲', FLEX: '◆', SIT: '▼', STASH: '●' };
+
+      document.getElementById('report-body').innerHTML = weeks.map(week => {
+        const weekRecs = reportData.recs.filter(r => r.week === week);
+        const gradedN  = weekRecs.filter(r =>
+          reportData.outcomes.some(o => o.recommendation_id === r.id)).length;
+        const correctN = weekRecs.filter(r =>
+          reportData.outcomes.some(o => o.recommendation_id === r.id && o.decision_correct)).length;
+
+        const tally = gradedN === 0
+          ? `${weekRecs.length} CALL${weekRecs.length !== 1 ? 'S' : ''} · UNGRADED`
+          : `${correctN}/${gradedN} CORRECT`;
+
+        return `
+          <div class="week-header">
+            <span>WEEK ${week}</span>
+            <span class="week-tally">${tally}</span>
+          </div>
+          ${weekRecs.map(rec => {
+            const outcome   = reportData.outcomes.find(o => o.recommendation_id === rec.id);
+            const isCorrect = outcome ? outcome.decision_correct : null;
+            const dec  = (rec.decision || 'SIT').toUpperCase();
+            const conf = rec.confidence || 0;
+            const tier = confTier(conf);
+            const okCls  = isCorrect === true  ? 'grade-active-correct'
+                         : isCorrect === false ? 'grade-inactive' : '';
+            const nokCls = isCorrect === false ? 'grade-active-wrong'
+                         : isCorrect === true  ? 'grade-inactive' : '';
+            return `
+              <div class="report-card dec-${dec.toLowerCase()}">
+                <div class="rcard-top">
+                  <div class="rcard-left">
+                    <span class="decision-badge">${icons[dec] || ''} ${dec}</span>
+                    <div>
+                      <div class="rcard-name">${escHtml(rec.player_name)}</div>
+                      <div class="rcard-meta">${escHtml(rec.position || '')} · WEEK ${rec.week}</div>
+                    </div>
+                  </div>
+                  <div class="conf-num conf-${tier}">${conf}<span class="conf-pct">%</span></div>
+                </div>
+                <div class="rcard-grade" id="grade-${rec.id}">
+                  <button class="grade-btn grade-correct ${okCls}"
+                    onclick="gradeCall('${rec.id}', true)">✓ CORRECT</button>
+                  <button class="grade-btn grade-wrong ${nokCls}"
+                    onclick="gradeCall('${rec.id}', false)">✗ WRONG</button>
+                </div>
+              </div>`;
+          }).join('')}`;
+      }).join('');
+    }
+
+    async function gradeCall(recId, isCorrect) {
+      const existing = reportData.outcomes.find(o => o.recommendation_id === recId);
+
+      // Optimistic UI
+      setGradeUI(recId, isCorrect);
+
+      try {
+        if (existing) {
+          await sb.from('outcomes')
+            .update({ decision_correct: isCorrect, updated_at: new Date().toISOString() })
+            .eq('id', existing.id);
+          existing.decision_correct = isCorrect;
+        } else {
+          const rec = reportData.recs.find(r => r.id === recId);
+          const { data: rows } = await sb.from('outcomes').insert({
+            recommendation_id: recId,
+            player_name:       rec?.player_name,
+            decision_correct:  isCorrect,
+            variance_flag:     false,
+            updated_at:        new Date().toISOString(),
+          }).select();
+          reportData.outcomes.push(
+            rows?.[0] ?? { recommendation_id: recId, decision_correct: isCorrect }
+          );
+        }
+        renderAccuracy();
+        // Refresh week tally labels
+        renderReport();
+
+      } catch (e) {
+        // Revert UI on failure
+        const prev = reportData.outcomes.find(o => o.recommendation_id === recId);
+        setGradeUI(recId, prev ? prev.decision_correct : null);
+      }
+    }
+
+    function setGradeUI(recId, isCorrect) {
+      const el = document.getElementById('grade-' + recId);
+      if (!el) return;
+      const [ok, nok] = el.querySelectorAll('.grade-btn');
+      ok.className  = 'grade-btn grade-correct'
+        + (isCorrect === true  ? ' grade-active-correct' : isCorrect === false ? ' grade-inactive' : '');
+      nok.className = 'grade-btn grade-wrong'
+        + (isCorrect === false ? ' grade-active-wrong'   : isCorrect === true  ? ' grade-inactive' : '');
     }
 
     /* ── HELPERS ────────────────────────────────────────────── */
