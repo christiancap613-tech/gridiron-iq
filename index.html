@@ -8,32 +8,32 @@
   <style>
     /* ── THEME TOKENS ───────────────────────────────────────── */
     :root {
-      --bg:          #000000;
-      --bg-card:     #0d0d0d;
-      --bg-card-2:   #161616;
-      --border:      #222222;
-      --text-1:      #ffffff;
-      --text-2:      #9ca3af;
-      --text-3:      #4b5563;
-      --start:       #00ff87;
-      --flex:        #fbbf24;
-      --sit:         #ff4d6d;
-      --stash:       #a855f7;
-      --accent:      #00ff87;
+      --bg:        #000000;
+      --bg-card:   #0d0d0d;
+      --bg-card-2: #161616;
+      --border:    #222222;
+      --text-1:    #ffffff;
+      --text-2:    #9ca3af;
+      --text-3:    #4b5563;
+      --start:     #00ff87;
+      --flex:      #fbbf24;
+      --sit:       #ff4d6d;
+      --stash:     #a855f7;
+      --accent:    #00ff87;
     }
     [data-theme="light"] {
-      --bg:          #ffffff;
-      --bg-card:     #f9fafb;
-      --bg-card-2:   #f3f4f6;
-      --border:      #e5e7eb;
-      --text-1:      #111827;
-      --text-2:      #6b7280;
-      --text-3:      #9ca3af;
-      --start:       #059669;
-      --flex:        #d97706;
-      --sit:         #dc2626;
-      --stash:       #7c3aed;
-      --accent:      #059669;
+      --bg:        #ffffff;
+      --bg-card:   #f9fafb;
+      --bg-card-2: #f3f4f6;
+      --border:    #e5e7eb;
+      --text-1:    #111827;
+      --text-2:    #6b7280;
+      --text-3:    #9ca3af;
+      --start:     #059669;
+      --flex:      #d97706;
+      --sit:       #dc2626;
+      --stash:     #7c3aed;
+      --accent:    #059669;
     }
 
     /* ── RESET & BASE ───────────────────────────────────────── */
@@ -89,8 +89,24 @@
     .header-right {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
+
+    /* Switch league button */
+    .btn-switch {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--text-2);
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-switch:hover { border-color: var(--accent); color: var(--accent); }
 
     /* Theme toggle pill */
     .theme-toggle {
@@ -128,6 +144,7 @@
       border: 1px solid var(--border);
       padding: 5px 10px;
       border-radius: 8px;
+      white-space: nowrap;
       transition: all 0.3s ease;
     }
 
@@ -141,6 +158,107 @@
     /* ── VIEWS ──────────────────────────────────────────────── */
     .view { display: flex; flex-direction: column; gap: 10px; }
     .hidden { display: none !important; }
+
+    /* ── ONBOARDING / USERNAME SCREEN ───────────────────────── */
+    .onboard-card {
+      margin-top: 24px;
+      padding: 40px 28px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      align-items: center;
+    }
+    .onboard-wordmark {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 38px;
+      letter-spacing: 5px;
+      color: var(--text-1);
+      line-height: 1;
+    }
+    .onboard-wordmark span { color: var(--accent); }
+    .onboard-tagline {
+      font-size: 9px;
+      color: var(--text-3);
+      letter-spacing: 3px;
+      margin-top: -6px;
+    }
+    .onboard-divider {
+      width: 32px;
+      height: 1px;
+      background: var(--border);
+      margin: 6px 0;
+    }
+    .onboard-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 2px;
+      color: var(--text-1);
+    }
+    .onboard-desc {
+      font-size: 12px;
+      color: var(--text-2);
+      line-height: 1.7;
+      max-width: 320px;
+    }
+
+    /* Text input (username field) */
+    .text-input {
+      width: 100%;
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 15px;
+      color: var(--text-1);
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      text-align: center;
+      transition: border-color 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+    .text-input::placeholder { color: var(--text-3); }
+    .text-input:focus { border-color: var(--accent); }
+
+    /* Inline error (username / league screens) */
+    .inline-error {
+      font-size: 11px;
+      color: var(--sit);
+      text-align: center;
+      min-height: 16px;
+    }
+
+    /* ── LEAGUE SELECT SCREEN ───────────────────────────────── */
+    .league-card {
+      cursor: pointer;
+      transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    }
+    .league-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .league-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 5px;
+      transition: color 0.3s ease;
+    }
+    .league-meta {
+      font-size: 10px;
+      color: var(--text-3);
+      letter-spacing: 1px;
+      transition: color 0.3s ease;
+    }
+    .btn-text {
+      background: none;
+      border: none;
+      font-size: 11px;
+      color: var(--text-3);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      padding: 8px;
+      transition: color 0.2s ease;
+      text-align: center;
+      width: 100%;
+    }
+    .btn-text:hover { color: var(--accent); }
 
     /* ── PAGE HEADER CARD ───────────────────────────────────── */
     .section-title {
@@ -189,8 +307,10 @@
       transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.15s ease;
     }
     .wr-card:hover { transform: translateY(-1px); }
-    .wr-card.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 5%, var(--bg-card)); }
-
+    .wr-card.selected {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 5%, var(--bg-card));
+    }
     .avatar {
       width: 40px;
       height: 40px;
@@ -223,7 +343,6 @@
       transition: color 0.3s ease;
     }
     .wr-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-
     .inj-badge {
       font-size: 9px;
       color: var(--sit);
@@ -271,7 +390,7 @@
 
     .btn-row { display: flex; gap: 8px; }
 
-    /* ── ANALYZING VIEW ─────────────────────────────────────── */
+    /* ── LOADING / ANALYZING VIEWS ──────────────────────────── */
     .analyzing-wrap {
       display: flex;
       flex-direction: column;
@@ -366,20 +485,23 @@
       opacity: 0;
       transition: background-color 0.3s ease, border-color 0.3s ease;
     }
-    .rec-card:nth-child(1) { animation-delay: 0.04s; }
-    .rec-card:nth-child(2) { animation-delay: 0.09s; }
-    .rec-card:nth-child(3) { animation-delay: 0.14s; }
-    .rec-card:nth-child(4) { animation-delay: 0.19s; }
-    .rec-card:nth-child(5) { animation-delay: 0.24s; }
-    .rec-card:nth-child(6) { animation-delay: 0.29s; }
-    .rec-card:nth-child(7) { animation-delay: 0.34s; }
-    .rec-card:nth-child(8) { animation-delay: 0.39s; }
+    .rec-card:nth-child(1)  { animation-delay: 0.04s; }
+    .rec-card:nth-child(2)  { animation-delay: 0.09s; }
+    .rec-card:nth-child(3)  { animation-delay: 0.14s; }
+    .rec-card:nth-child(4)  { animation-delay: 0.19s; }
+    .rec-card:nth-child(5)  { animation-delay: 0.24s; }
+    .rec-card:nth-child(6)  { animation-delay: 0.29s; }
+    .rec-card:nth-child(7)  { animation-delay: 0.34s; }
+    .rec-card:nth-child(8)  { animation-delay: 0.39s; }
+    .rec-card:nth-child(9)  { animation-delay: 0.44s; }
+    .rec-card:nth-child(10) { animation-delay: 0.49s; }
+    .rec-card:nth-child(11) { animation-delay: 0.54s; }
+    .rec-card:nth-child(12) { animation-delay: 0.59s; }
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* Decision-specific left border accent */
     .dec-start { border-left: 3px solid var(--start); }
     .dec-flex  { border-left: 3px solid var(--flex);  }
     .dec-sit   { border-left: 3px solid var(--sit);   }
@@ -410,7 +532,6 @@
 
     .rec-player { font-size: 13px; font-weight: 500; color: var(--text-1); transition: color 0.3s ease; }
 
-    /* Confidence */
     .rec-conf { text-align: right; }
     .conf-num {
       font-family: 'Bebas Neue', sans-serif;
@@ -433,7 +554,6 @@
       border-radius: 3px;
       transition: width 0.6s ease, background-color 0.3s ease;
     }
-    /* confidence colour classes */
     .conf-high { color: var(--start); }
     .conf-mid  { color: var(--flex);  }
     .conf-low  { color: var(--sit);   }
@@ -441,7 +561,6 @@
     .bar-mid   { background: var(--flex);  }
     .bar-low   { background: var(--sit);   }
 
-    /* Rec body */
     .rec-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; }
     .rec-headline {
       font-size: 13px;
@@ -530,13 +649,14 @@
   <header class="header">
     <div>
       <div class="logo">GRIDIRON<span>IQ</span></div>
-      <div class="logo-sub">DYNASTY · PPR · 2026</div>
+      <div id="header-sub" class="logo-sub">DYNASTY · PPR · 2026</div>
     </div>
     <div class="header-right">
+      <button id="btn-switch-league" class="btn-switch hidden" onclick="switchLeague()">↗ SWITCH LEAGUE</button>
       <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light / dark">
         <div class="toggle-knob">☀</div>
       </button>
-      <div class="user-badge">@christiancap24</div>
+      <div id="user-badge" class="user-badge">SLEEPER</div>
     </div>
   </header>
 
@@ -544,12 +664,49 @@
   <main>
     <div class="container">
 
-      <!-- VIEW: ROSTER -->
-      <div id="view-roster" class="view">
+      <!-- VIEW: USERNAME ENTRY ─────────────────────────────── -->
+      <div id="view-username" class="view">
+        <div class="card onboard-card">
+          <div class="onboard-wordmark">GRIDIRON<span>IQ</span></div>
+          <div class="onboard-tagline">DYNASTY · PPR · AI-POWERED</div>
+          <div class="onboard-divider"></div>
+          <div class="onboard-title">CONNECT YOUR SLEEPER</div>
+          <div class="onboard-desc">Enter your Sleeper username to load your live dynasty roster and get AI-powered WR analysis.</div>
+          <input id="username-input" class="text-input" type="text"
+            placeholder="Sleeper username…"
+            autocomplete="off" autocapitalize="none" spellcheck="false"
+            onkeydown="if(event.key==='Enter')connectSleeper()"/>
+          <div id="username-error" class="inline-error hidden"></div>
+          <button class="btn btn-primary" onclick="connectSleeper()">CONNECT →</button>
+        </div>
+      </div>
+
+      <!-- VIEW: LOADING (Sleeper API) ──────────────────────── -->
+      <div id="view-loading" class="hidden">
+        <div class="analyzing-wrap">
+          <div class="spinner"></div>
+          <div id="loading-title" class="analyzing-title">LOADING</div>
+          <div id="loading-sub" class="analyzing-sub">CONNECTING TO SLEEPER</div>
+        </div>
+      </div>
+
+      <!-- VIEW: LEAGUE SELECT ──────────────────────────────── -->
+      <div id="view-leagues" class="view hidden">
+        <div class="card">
+          <div class="section-title">YOUR LEAGUES</div>
+          <div id="leagues-count" class="section-sub"></div>
+        </div>
+        <div id="league-error" class="card error-card hidden"></div>
+        <div id="league-list"></div>
+        <button class="btn-text" onclick="showView('username')">← CHANGE USER</button>
+      </div>
+
+      <!-- VIEW: ROSTER ─────────────────────────────────────── -->
+      <div id="view-roster" class="view hidden">
 
         <div class="card">
           <div class="section-title">YOUR WIDE RECEIVERS</div>
-          <div class="section-sub">WEEK 1 · 2026 NFL SEASON</div>
+          <div id="roster-sub" class="section-sub">WEEK 1 · 2026 NFL SEASON</div>
         </div>
 
         <div id="error-box" class="card error-card hidden"></div>
@@ -566,7 +723,7 @@
 
       </div>
 
-      <!-- VIEW: ANALYZING -->
+      <!-- VIEW: ANALYZING (AI) ─────────────────────────────── -->
       <div id="view-analyzing" class="hidden">
         <div class="analyzing-wrap">
           <div class="spinner"></div>
@@ -575,7 +732,7 @@
         </div>
       </div>
 
-      <!-- VIEW: RESULTS -->
+      <!-- VIEW: RESULTS ────────────────────────────────────── -->
       <div id="view-results" class="view hidden">
 
         <div class="card narrative-card">
@@ -620,37 +777,27 @@
 
   <!-- ── BOTTOM NAV ───────────────────────────────────────────── -->
   <nav class="bottom-nav">
-    <button class="nav-tab active">
-      <span class="nav-icon">↔</span>WR
-    </button>
-    <button class="nav-tab">
-      <span class="nav-icon">◈</span>RB
-    </button>
-    <button class="nav-tab">
-      <span class="nav-icon">◎</span>QB
-    </button>
-    <button class="nav-tab">
-      <span class="nav-icon">⊞</span>MATCHUP
-    </button>
+    <button class="nav-tab active"><span class="nav-icon">↔</span>WR</button>
+    <button class="nav-tab"><span class="nav-icon">◈</span>RB</button>
+    <button class="nav-tab"><span class="nav-icon">◎</span>QB</button>
+    <button class="nav-tab"><span class="nav-icon">⊞</span>MATCHUP</button>
   </nav>
 
   <script>
-    const WORKER_URL = 'https://gridiron-iq-proxy.christiancap613-tech.workers.dev';
+    /* ── CONSTANTS ──────────────────────────────────────────── */
+    const WORKER_URL       = 'https://gridiron-iq-proxy.christiancap613-tech.workers.dev';
+    const PLAYER_CACHE_KEY = 'giq_players_v2';
+    const PLAYER_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 h
 
-    const WRS = [
-      { id:'w1', name:'A.J. Brown',          team:'PHI', age:27, exp:6,  status:'Starter', injury:null   },
-      { id:'w2', name:'George Pickens',       team:'DAL', age:24, exp:3,  status:'Starter', injury:null   },
-      { id:'w3', name:'Tyreek Hill',          team:'MIA', age:31, exp:10, status:'Bench',   injury:'QUES' },
-      { id:'w4', name:'Isaiah Bond',          team:'CLE', age:22, exp:1,  status:'Bench',   injury:null   },
-      { id:'w5', name:'Will Robinson',        team:'TEN', age:26, exp:4,  status:'Bench',   injury:null   },
-      { id:'w6', name:'Rashid Shaheed',       team:'SEA', age:26, exp:3,  status:'Bench',   injury:null   },
-      { id:'w7', name:'Parker Washington',    team:'JAX', age:24, exp:2,  status:'Bench',   injury:null   },
-      { id:'w8', name:'Tez Johnson',          team:'TEN', age:23, exp:1,  status:'Taxi',    injury:null   },
-    ];
+    /* ── STATE ──────────────────────────────────────────────── */
+    let sleeperUser    = null;  // { user_id, username, display_name, … }
+    let sleeperLeagues = [];    // full league objects for picker
+    let currentLeague  = null;  // selected league
+    let WRS            = [];    // live WR objects (replaces hardcoded array)
+    let selectMode     = false;
+    let selected       = [];
 
-    let selectMode = false, selected = [];
-
-    // ── THEME ──────────────────────────────────────────────────
+    /* ── THEME ──────────────────────────────────────────────── */
     function toggleTheme() {
       const html = document.documentElement;
       const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -658,8 +805,231 @@
       document.querySelector('.toggle-knob').textContent = next === 'dark' ? '☀' : '🌙';
     }
 
-    // ── ROSTER INIT ────────────────────────────────────────────
+    /* ── VIEW ROUTER ────────────────────────────────────────── */
+    function showView(v) {
+      ['username','loading','leagues','roster','analyzing','results'].forEach(n =>
+        document.getElementById('view-' + n).classList.add('hidden')
+      );
+      document.getElementById('view-' + v).classList.remove('hidden');
+    }
+
+    /* ── LOADING HELPER ─────────────────────────────────────── */
+    function setLoading(title, sub) {
+      document.getElementById('loading-title').textContent = title;
+      document.getElementById('loading-sub').textContent   = sub;
+      showView('loading');
+    }
+
+    /* ── ERROR HELPERS ──────────────────────────────────────── */
+    function showUsernameError(msg) {
+      const el = document.getElementById('username-error');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+    function clearUsernameError() {
+      document.getElementById('username-error').classList.add('hidden');
+    }
+    function showLeagueError(msg) {
+      const el = document.getElementById('league-error');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+    function showError(msg) { // roster-view analysis error
+      const el = document.getElementById('error-box');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    /* ── APP INIT ───────────────────────────────────────────── */
     function init() {
+      const stored = localStorage.getItem('giq_username');
+      if (stored) {
+        connectSleeper(stored, /*silent=*/true);
+      } else {
+        showView('username');
+      }
+    }
+
+    /* ── SLEEPER: CONNECT ───────────────────────────────────── */
+    async function connectSleeper(usernameArg, silent = false) {
+      const username = (usernameArg || document.getElementById('username-input').value || '').trim();
+      if (!username) { showUsernameError('Enter your Sleeper username.'); return; }
+
+      clearUsernameError();
+      setLoading('FETCHING PROFILE', 'CONNECTING TO SLEEPER');
+
+      try {
+        // 1 — resolve user
+        const userRes  = await fetch(`https://api.sleeper.app/v1/user/${encodeURIComponent(username)}`);
+        const userData = await userRes.json();
+        if (!userData?.user_id) throw new Error(`Username "${username}" not found on Sleeper.`);
+
+        sleeperUser = userData;
+        localStorage.setItem('giq_username', username);
+        document.getElementById('user-badge').textContent = '@' + username;
+
+        // 2 — fetch 2026 leagues
+        setLoading('FETCHING LEAGUES', 'LOADING YOUR 2026 SEASON');
+        const leaguesRes  = await fetch(`https://api.sleeper.app/v1/user/${userData.user_id}/leagues/nfl/2026`);
+        const leaguesData = await leaguesRes.json();
+
+        if (!Array.isArray(leaguesData) || leaguesData.length === 0)
+          throw new Error('No 2026 NFL leagues found for this account.');
+
+        sleeperLeagues = leaguesData;
+
+        // 3 — try to auto-restore last selected league
+        const savedId = localStorage.getItem('giq_league_id');
+        if (savedId) {
+          const saved = sleeperLeagues.find(l => l.league_id === savedId);
+          if (saved) { await selectLeague(saved); return; }
+        }
+
+        renderLeagues();
+        showView('leagues');
+
+      } catch (e) {
+        showView('username');
+        if (!silent) showUsernameError(e.message);
+      }
+    }
+
+    /* ── SLEEPER: RENDER LEAGUE PICKER ──────────────────────── */
+    function renderLeagues() {
+      document.getElementById('league-error').classList.add('hidden');
+      document.getElementById('leagues-count').textContent =
+        `${sleeperLeagues.length} LEAGUE${sleeperLeagues.length !== 1 ? 'S' : ''} · SELECT ONE TO ANALYZE`;
+
+      document.getElementById('league-list').innerHTML = sleeperLeagues.map((l, i) => {
+        const rec     = l.scoring_settings?.rec ?? 0;
+        const scoring = rec === 1 ? 'PPR' : rec === 0.5 ? 'HALF PPR' : 'STANDARD';
+        const type    = l.settings?.type === 2 ? 'DYNASTY' : 'REDRAFT';
+        const teams   = l.total_rosters ?? '?';
+        return `
+          <div class="card league-card" onclick="selectLeagueByIndex(${i})">
+            <div class="league-name">${escHtml(l.name || 'Unnamed League')}</div>
+            <div class="league-meta">${teams} TEAMS · ${scoring} · ${type}</div>
+          </div>`;
+      }).join('');
+    }
+
+    function selectLeagueByIndex(i) { selectLeague(sleeperLeagues[i]); }
+
+    /* ── SLEEPER: SELECT LEAGUE & LOAD ROSTER ───────────────── */
+    async function selectLeague(league) {
+      currentLeague = league;
+      localStorage.setItem('giq_league_id', league.league_id);
+
+      setLoading('LOADING ROSTER', 'FETCHING YOUR PLAYERS');
+
+      try {
+        // Fetch rosters and player DB in parallel
+        const [rosters, players] = await Promise.all([
+          fetch(`https://api.sleeper.app/v1/league/${league.league_id}/rosters`).then(r => r.json()),
+          getPlayersData(),
+        ]);
+
+        // Find this user's roster
+        const myRoster = rosters.find(r => r.owner_id === sleeperUser.user_id);
+        if (!myRoster) throw new Error("Couldn't find your roster in this league.");
+
+        WRS = buildWRArray(myRoster, players);
+        if (WRS.length === 0) throw new Error('No WRs found on your roster in this league.');
+
+        // Update header
+        document.getElementById('header-sub').textContent = league.name.toUpperCase();
+        document.getElementById('btn-switch-league').classList.remove('hidden');
+        document.getElementById('roster-sub').textContent =
+          (league.name + ' · WEEK 1 · 2026').toUpperCase();
+
+        // Reset any lingering roster state
+        document.getElementById('error-box').classList.add('hidden');
+        selectMode = false;
+        selected   = [];
+        document.getElementById('btn-select').textContent = 'SELECT WRs';
+        document.getElementById('btn-analyze-selected').style.display = 'none';
+
+        renderRoster();
+        showView('roster');
+
+      } catch (e) {
+        // Failed to load — return to league picker with error
+        renderLeagues();
+        showView('leagues');
+        showLeagueError(e.message);
+      }
+    }
+
+    /* ── SLEEPER: FETCH & CACHE PLAYER DATABASE ─────────────── */
+    async function getPlayersData() {
+      // Check cache
+      try {
+        const raw = localStorage.getItem(PLAYER_CACHE_KEY);
+        if (raw) {
+          const { data, ts } = JSON.parse(raw);
+          if (Date.now() - ts < PLAYER_CACHE_TTL) return data;
+        }
+      } catch (e) { /* corrupt cache — re-fetch */ }
+
+      setLoading('DOWNLOADING PLAYERS', 'THIS ONLY HAPPENS ONCE PER DAY');
+      const all = await fetch('https://api.sleeper.app/v1/players/nfl').then(r => r.json());
+
+      // Store only skill positions to stay within localStorage limits (~5 MB)
+      const SKILL = new Set(['QB', 'RB', 'WR', 'TE', 'K']);
+      const data  = {};
+      for (const [id, p] of Object.entries(all)) {
+        if (p?.position && SKILL.has(p.position)) data[id] = p;
+      }
+
+      try {
+        localStorage.setItem(PLAYER_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
+      } catch (e) { /* localStorage quota exceeded — continue without caching */ }
+
+      return data;
+    }
+
+    /* ── BUILD WR ARRAY FROM SLEEPER ROSTER ─────────────────── */
+    function buildWRArray(roster, players) {
+      const starters = new Set(roster.starters || []);
+      const taxi     = new Set(roster.taxi     || []);
+
+      return (roster.players || [])
+        .map(pid => {
+          const p = players[pid];
+          if (!p || p.position !== 'WR') return null;
+          return {
+            id:     pid,
+            name:   `${p.first_name} ${p.last_name}`,
+            team:   p.team  || 'FA',
+            age:    p.age   || 0,
+            exp:    p.years_exp ?? 0,
+            status: starters.has(pid) ? 'Starter' : taxi.has(pid) ? 'Taxi' : 'Bench',
+            injury: mapInjury(p.injury_status),
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+          const o = { Starter: 0, Bench: 1, Taxi: 2 };
+          return (o[a.status] ?? 1) - (o[b.status] ?? 1);
+        });
+    }
+
+    /* Maps Sleeper injury_status strings → short badge text */
+    function mapInjury(raw) {
+      if (!raw) return null;
+      const map = {
+        'Questionable': 'QUES', 'Q': 'QUES',
+        'Doubtful':     'DBT',  'D': 'DBT',
+        'Out':          'OUT',  'O': 'OUT',
+        'PUP-R': 'PUP', 'PUP-P': 'PUP', 'P': 'PUP',
+        'IR':    'IR',  'IR-R':  'IR',   'I': 'IR',
+        'NFI-R': 'NFI',
+      };
+      return map[raw] || raw.slice(0, 5).toUpperCase();
+    }
+
+    /* ── RENDER ROSTER ──────────────────────────────────────── */
+    function renderRoster() {
       const groups = [
         { label: 'STARTERS',               wrs: WRS.filter(w => w.status === 'Starter') },
         { label: 'BENCH',                  wrs: WRS.filter(w => w.status === 'Bench' && !w.injury) },
@@ -670,16 +1040,17 @@
       document.getElementById('wr-list').innerHTML = groups.map(g => `
         <div class="group-label">${g.label}</div>
         ${g.wrs.map(wr => {
-          const dotColor = wr.injury           ? 'var(--sit)'
-                         : wr.status==='Starter' ? 'var(--start)'
-                         : wr.status==='Taxi'    ? 'var(--stash)'
-                         :                         'var(--text-3)';
+          const dotColor = wr.injury             ? 'var(--sit)'
+                         : wr.status === 'Starter' ? 'var(--start)'
+                         : wr.status === 'Taxi'    ? 'var(--stash)'
+                         :                           'var(--text-3)';
+          const initials = wr.name.split(' ').map(n => n[0]).join('').slice(0, 2);
           return `
             <div class="wr-card" id="card-${wr.id}" onclick="toggleCard('${wr.id}')">
-              <div class="avatar">${wr.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+              <div class="avatar">${initials}</div>
               <div class="wr-info">
-                <div class="wr-name">${wr.name}</div>
-                <div class="wr-meta">${wr.team} · Age ${wr.age} · ${wr.exp===0?'Rookie':'Yr '+wr.exp}</div>
+                <div class="wr-name">${escHtml(wr.name)}</div>
+                <div class="wr-meta">${wr.team} · Age ${wr.age || '—'} · ${wr.exp === 0 ? 'Rookie' : 'Yr ' + wr.exp}</div>
               </div>
               <div class="wr-right">
                 ${wr.injury ? `<div class="inj-badge">${wr.injury}</div>` : ''}
@@ -690,12 +1061,19 @@
       `).join('');
     }
 
+    /* ── SWITCH LEAGUE ──────────────────────────────────────── */
+    function switchLeague() {
+      renderLeagues();
+      showView('leagues');
+    }
+
+    /* ── SELECT / DESELECT WR CARDS ─────────────────────────── */
     function toggleCard(id) {
       if (!selectMode) return;
       const wr  = WRS.find(w => w.id === id);
       const idx = selected.findIndex(w => w.id === id);
-      if (idx > -1) { selected.splice(idx, 1); document.getElementById('card-'+id).classList.remove('selected'); }
-      else          { selected.push(wr);        document.getElementById('card-'+id).classList.add('selected');    }
+      if (idx > -1) { selected.splice(idx, 1); document.getElementById('card-' + id).classList.remove('selected'); }
+      else          { selected.push(wr);        document.getElementById('card-' + id).classList.add('selected');    }
       const btn = document.getElementById('btn-analyze-selected');
       btn.style.display = selected.length > 0 ? 'flex' : 'none';
       btn.textContent   = `ANALYZE ${selected.length}`;
@@ -709,70 +1087,66 @@
       document.getElementById('btn-analyze-selected').style.display = 'none';
     }
 
-    function showView(v) {
-      ['roster','analyzing','results'].forEach(n =>
-        document.getElementById('view-'+n).classList.add('hidden')
-      );
-      document.getElementById('view-'+v).classList.remove('hidden');
+    /* ── HELPERS ────────────────────────────────────────────── */
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
-
-    function showError(msg) {
-      const el = document.getElementById('error-box');
-      el.textContent = msg;
-      el.classList.remove('hidden');
-    }
-
     function confTier(c) { return c >= 80 ? 'high' : c >= 65 ? 'mid' : 'low'; }
-
     function gradeColor(g) {
       if (!g) return 'var(--text-3)';
       const f = g[0];
-      return f==='A' ? 'var(--start)' : f==='B' ? 'var(--flex)' : f==='C' ? '#fb923c' : 'var(--sit)';
+      return f === 'A' ? 'var(--start)' : f === 'B' ? 'var(--flex)' : f === 'C' ? '#fb923c' : 'var(--sit)';
     }
 
-    // ── ANALYZE ───────────────────────────────────────────────
+    /* ── ANALYZE ────────────────────────────────────────────── */
     async function analyze(wrs) {
       document.getElementById('error-box').classList.add('hidden');
       showView('analyzing');
 
       const prompt = `Analyze these WRs for dynasty PPR fantasy football Week 1 2026. Return ONLY valid JSON, no markdown.\n\n`
-        + wrs.map(w => `${w.name}, ${w.team}, Age ${w.age}, ${w.exp===0?'Rookie':'Yr '+w.exp}, ${w.status}${w.injury?', '+w.injury:''}`).join('\n');
+        + wrs.map(w =>
+            `${w.name}, ${w.team}, Age ${w.age || '?'}, ${w.exp === 0 ? 'Rookie' : 'Yr ' + w.exp}, ${w.status}${w.injury ? ', ' + w.injury : ''}`
+          ).join('\n');
 
       const system = `You are GridironIQ, a direct dynasty PPR fantasy analyst. Be concise. Respond ONLY with valid JSON, no markdown fences, no text outside the object: {"week_narrative":"2 sentences max","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2 sentences max","key_factor":"one short phrase","risk":null}],"dynasty_insight":"one sentence"}`;
 
       try {
         const res = await fetch(WORKER_URL, {
-          method: 'POST',
+          method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:1400, system, messages:[{ role:'user', content:prompt }] }),
+          body:    JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1400, system, messages: [{ role: 'user', content: prompt }] }),
         });
         const raw = await res.text();
         let d;
-        try { d = JSON.parse(raw); } catch(e) { throw new Error('Bad response: '+raw.slice(0,200)); }
-        if (!res.ok || d.type==='error') throw new Error(d.error?.message || 'HTTP '+res.status);
-        const txt   = d.content?.find(b => b.type==='text')?.text || '';
-        const match = txt.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
-        if (!match) throw new Error('No JSON in response: '+txt.slice(0,200));
+        try { d = JSON.parse(raw); } catch (e) { throw new Error('Bad response: ' + raw.slice(0, 200)); }
+        if (!res.ok || d.type === 'error') throw new Error(d.error?.message || 'HTTP ' + res.status);
+        const txt   = d.content?.find(b => b.type === 'text')?.text || '';
+        const match = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
+        if (!match) throw new Error('No JSON in response: ' + txt.slice(0, 200));
         renderResults(JSON.parse(match[0]));
         showView('results');
-      } catch(e) {
+      } catch (e) {
         showView('roster');
-        showError('Analysis failed: '+e.message);
+        showError('Analysis failed: ' + e.message);
       }
     }
 
-    // ── RENDER RESULTS ─────────────────────────────────────────
+    /* ── RENDER RESULTS ─────────────────────────────────────── */
     function renderResults(data) {
       document.getElementById('narrative-text').textContent = data.week_narrative || '';
 
       const grade = (data.roster_grade || '').split(' ')[0];
-      const gv = document.getElementById('grade-value');
-      gv.textContent   = grade;
-      gv.style.color   = gradeColor(grade);
+      const gv    = document.getElementById('grade-value');
+      gv.textContent = grade;
+      gv.style.color = gradeColor(grade);
 
       document.getElementById('outlook-text').textContent = data.dynasty_insight || '';
 
-      const icons = { START:'▲', FLEX:'◆', SIT:'▼', STASH:'●' };
+      const icons = { START: '▲', FLEX: '◆', SIT: '▼', STASH: '●' };
 
       document.getElementById('rec-list').innerHTML = (data.recommendations || []).map(rec => {
         const dec  = (rec.decision || 'SIT').toUpperCase();
@@ -783,8 +1157,8 @@
           <div class="rec-card dec-${cls}">
             <div class="rec-header">
               <div class="rec-header-left">
-                <span class="decision-badge">${icons[dec]||''} ${dec}</span>
-                <span class="rec-player">${rec.player_name}</span>
+                <span class="decision-badge">${icons[dec] || ''} ${dec}</span>
+                <span class="rec-player">${escHtml(rec.player_name)}</span>
               </div>
               <div class="rec-conf">
                 <div class="conf-num conf-${tier}">${conf}<span class="conf-pct">%</span></div>
@@ -794,11 +1168,11 @@
               </div>
             </div>
             <div class="rec-body">
-              <div class="rec-headline">${rec.headline || ''}</div>
-              <div class="rec-reasoning">${rec.reasoning || ''}</div>
+              <div class="rec-headline">${escHtml(rec.headline || '')}</div>
+              <div class="rec-reasoning">${escHtml(rec.reasoning || '')}</div>
               <div class="tags">
-                ${rec.key_factor                           ? `<div class="tag tag-key">◎ ${rec.key_factor}</div>`  : ''}
-                ${rec.risk && rec.risk !== 'null' ? `<div class="tag tag-risk">⚠ ${rec.risk}</div>` : ''}
+                ${rec.key_factor ? `<div class="tag tag-key">◎ ${escHtml(rec.key_factor)}</div>` : ''}
+                ${rec.risk && rec.risk !== 'null' ? `<div class="tag tag-risk">⚠ ${escHtml(rec.risk)}</div>` : ''}
               </div>
             </div>
           </div>`;
