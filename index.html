@@ -813,11 +813,17 @@
     <button class="nav-tab"><span class="nav-icon">⊞</span>MATCHUP</button>
   </nav>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     /* ── CONSTANTS ──────────────────────────────────────────── */
     const WORKER_URL       = 'https://gridiron-iq-proxy.christiancap613-tech.workers.dev';
     const PLAYER_CACHE_KEY = 'giq_players_v2';
     const PLAYER_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 h
+
+    /* ── SUPABASE ───────────────────────────────────────────── */
+    const SUPABASE_URL = 'https://niawfubwwstjpwbtrsgm.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pYXdmdWJ3d3N0anB3YnRyc2dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4NDI5MDAsImV4cCI6MjA5NTQxODkwMH0.-vup-to4ONOSQFKiR9CKkgVNRHr6yRyQxggwlbNdq-0';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     /* ── STATE ──────────────────────────────────────────────── */
     let sleeperUser    = null;  // { user_id, username, display_name, … }
@@ -872,6 +878,34 @@
       el.classList.remove('hidden');
     }
 
+    /* ── SUPABASE HELPERS ───────────────────────────────────── */
+    async function saveUser(username, leagueId) {
+      if (!username) return;
+      try {
+        const record = { sleeper_username: username };
+        if (leagueId) record.league_id = leagueId;
+        await sb.from('users').upsert(record, { onConflict: 'sleeper_username' });
+      } catch (_) { /* non-critical */ }
+    }
+
+    async function saveRecommendations(recs, pos) {
+      if (!recs?.length || !sleeperUser || !currentLeague) return;
+      try {
+        const rows = recs.map(rec => ({
+          sleeper_username: sleeperUser.username,
+          league_id:        currentLeague.league_id,
+          player_name:      rec.player_name,
+          position:         pos,
+          decision:         rec.decision,
+          confidence:       rec.confidence,
+          reasoning:        rec.reasoning,
+          week:             1,
+          season:           2026,
+        }));
+        await sb.from('recommendations').insert(rows);
+      } catch (_) { /* non-critical */ }
+    }
+
     /* ── APP INIT ───────────────────────────────────────────── */
     function init() {
       const stored = localStorage.getItem('giq_username');
@@ -899,6 +933,7 @@
         sleeperUser = userData;
         localStorage.setItem('giq_username', username);
         document.getElementById('user-badge').textContent = '@' + username;
+        saveUser(username); // persist to Supabase (no league yet)
 
         // 2 — fetch 2026 leagues
         setLoading('FETCHING LEAGUES', 'LOADING YOUR 2026 SEASON');
@@ -951,6 +986,7 @@
     async function selectLeague(league) {
       currentLeague = league;
       localStorage.setItem('giq_league_id', league.league_id);
+      saveUser(sleeperUser?.username, league.league_id); // update league in Supabase
 
       setLoading('LOADING ROSTER', 'FETCHING YOUR PLAYERS');
 
@@ -1240,7 +1276,9 @@
         const txt   = d.content?.find(b => b.type === 'text')?.text || '';
         const match = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
         if (!match) throw new Error('No JSON in response: ' + txt.slice(0, 200));
-        renderResults(JSON.parse(match[0]));
+        const result = JSON.parse(match[0]);
+        renderResults(result);
+        saveRecommendations(result.recommendations, pos); // fire-and-forget
         showView('results');
       } catch (e) {
         showView('roster');
