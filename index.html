@@ -1005,12 +1005,14 @@
             exp:    p.years_exp ?? 0,
             status: starters.has(pid) ? 'Starter' : taxi.has(pid) ? 'Taxi' : 'Bench',
             injury: mapInjury(p.injury_status),
+            depth:  p.depth_chart_order ?? 999,  // used for sort only
           };
         })
         .filter(Boolean)
         .sort((a, b) => {
           const o = { Starter: 0, Bench: 1, Taxi: 2 };
-          return (o[a.status] ?? 1) - (o[b.status] ?? 1);
+          const byStatus = (o[a.status] ?? 1) - (o[b.status] ?? 1);
+          return byStatus !== 0 ? byStatus : a.depth - b.depth;
         });
     }
 
@@ -1107,8 +1109,11 @@
       document.getElementById('error-box').classList.add('hidden');
       showView('analyzing');
 
+      // Cap at 10: WRS is already sorted starters → bench (depth order) → taxi
+      const toAnalyze = wrs.slice(0, 10);
+
       const prompt = `Analyze these WRs for dynasty PPR fantasy football Week 1 2026. Return ONLY valid JSON, no markdown.\n\n`
-        + wrs.map(w =>
+        + toAnalyze.map(w =>
             `${w.name}, ${w.team}, Age ${w.age || '?'}, ${w.exp === 0 ? 'Rookie' : 'Yr ' + w.exp}, ${w.status}${w.injury ? ', ' + w.injury : ''}`
           ).join('\n');
 
@@ -1118,7 +1123,7 @@
         const res = await fetch(WORKER_URL, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1400, system, messages: [{ role: 'user', content: prompt }] }),
+          body:    JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 2000, system, messages: [{ role: 'user', content: prompt }] }),
         });
         const raw = await res.text();
         let d;
