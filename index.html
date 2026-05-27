@@ -610,6 +610,29 @@
       transition: color 0.3s ease;
     }
 
+    /* ── CONTEXT TEXTAREA ──────────────────────────────────── */
+    .context-card { padding: 13px 15px; display: flex; flex-direction: column; gap: 8px; }
+    .context-label {
+      font-size: 9px;
+      color: var(--accent);
+      letter-spacing: 2px;
+      transition: color 0.3s ease;
+    }
+    .context-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      color: var(--text-1);
+      line-height: 1.6;
+      resize: none;
+      min-height: 56px;
+      transition: color 0.3s ease;
+    }
+    .context-input::placeholder { color: var(--text-3); }
+
     /* ── BOTTOM NAV ─────────────────────────────────────────── */
     .bottom-nav {
       position: fixed;
@@ -713,6 +736,12 @@
         <div id="error-box" class="card error-card hidden"></div>
 
         <div id="wr-list"></div>
+
+        <div class="card context-card">
+          <div class="context-label">CONTEXT FOR AI</div>
+          <textarea id="analysis-context" class="context-input" rows="3"
+            placeholder="Add any relevant roster news, injuries or depth chart changes before analyzing (e.g. Kenneth Walker was traded, Charbonnet is now the starter)."></textarea>
+        </div>
 
         <button id="btn-analyze-all" class="btn btn-primary" onclick="analyzeAll()">ANALYZE ALL WRs</button>
 
@@ -1184,10 +1213,13 @@
       // Cap at 10: array is already sorted starters → bench (depth order) → taxi
       const toAnalyze = players.slice(0, 10);
 
+      const userContext = (document.getElementById('analysis-context').value || '').trim();
+
       const prompt = `Analyze these ${pos}s for dynasty PPR fantasy football Week 1 2026. Return ONLY valid JSON, no markdown.\n\n`
         + toAnalyze.map(w =>
             `${w.name}, ${w.team}, Age ${w.age || '?'}, ${w.exp === 0 ? 'Rookie' : 'Yr ' + w.exp}, ${w.status}${w.injury ? ', ' + w.injury : ''}`
-          ).join('\n');
+          ).join('\n')
+        + (userContext ? `\n\nADDITIONAL CONTEXT (prioritize this over your training data):\n${userContext}` : '');
 
       const wrSystem = `You are GridironIQ, a direct dynasty PPR fantasy analyst. Be concise. Respond ONLY with valid JSON, no markdown fences, no text outside the object: {"week_narrative":"2 sentences max","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2 sentences max","key_factor":"one short phrase","risk":null}],"dynasty_insight":"one sentence"}`;
 
