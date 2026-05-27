@@ -235,32 +235,6 @@
     }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-    /* ── CONTEXT CARD ───────────────────────────────────────── */
-    .context-label {
-      font-size: 9px;
-      color: var(--text-3);
-      letter-spacing: 2px;
-      margin-bottom: 10px;
-      transition: color 0.3s ease;
-    }
-    .context-label span { color: var(--border); }
-    .context-area {
-      width: 100%;
-      background: var(--bg-card-2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 11px 13px;
-      font-size: 11px;
-      color: var(--text-1);
-      line-height: 1.5;
-      font-family: 'Inter', sans-serif;
-      resize: none;
-      outline: none;
-      transition: border-color 0.2s ease, background-color 0.3s ease, color 0.3s ease;
-    }
-    .context-area::placeholder { color: var(--text-3); }
-    .context-area:focus { border-color: var(--accent); }
-
     /* ── BUTTONS ────────────────────────────────────────────── */
     .btn {
       cursor: pointer;
@@ -582,12 +556,6 @@
 
         <div id="wr-list"></div>
 
-        <div class="card">
-          <div class="context-label">ADD CONTEXT <span>(OPTIONAL)</span></div>
-          <textarea id="context-input" class="context-area" rows="3"
-            placeholder="e.g. My opponent is weak at WR. Tyreek status unclear..."></textarea>
-        </div>
-
         <button class="btn btn-primary" onclick="analyze(WRS)">ANALYZE ALL WRs</button>
 
         <div class="btn-row">
@@ -767,18 +735,16 @@
       document.getElementById('error-box').classList.add('hidden');
       showView('analyzing');
 
-      const ctx    = document.getElementById('context-input').value;
       const prompt = `Analyze these WRs for dynasty PPR fantasy football Week 1 2026. Return ONLY valid JSON, no markdown.\n\n`
-        + wrs.map(w => `${w.name} (${w.team}, Age ${w.age}, ${w.exp===0?'Rookie':'Yr '+w.exp}, ${w.status}${w.injury?', '+w.injury:''})`).join('\n')
-        + (ctx ? '\n\nManager context: '+ctx : '');
+        + wrs.map(w => `${w.name}, ${w.team}, Age ${w.age}, ${w.exp===0?'Rookie':'Yr '+w.exp}, ${w.status}${w.injury?', '+w.injury:''}`).join('\n');
 
-      const system = `You are GridironIQ, a direct dynasty PPR fantasy analyst. Respond ONLY with valid JSON, no markdown fences, no text outside the object: {"week_narrative":"2-3 sentences","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2-3 sentences","key_factor":"one stat or factor","risk":null}],"dynasty_insight":"one sentence"}`;
+      const system = `You are GridironIQ, a direct dynasty PPR fantasy analyst. Be concise. Respond ONLY with valid JSON, no markdown fences, no text outside the object: {"week_narrative":"2 sentences max","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2 sentences max","key_factor":"one short phrase","risk":null}],"dynasty_insight":"one sentence"}`;
 
       try {
         const res = await fetch(WORKER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:1000, system, messages:[{ role:'user', content:prompt }] }),
+          body: JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:1400, system, messages:[{ role:'user', content:prompt }] }),
         });
         const raw = await res.text();
         let d;
