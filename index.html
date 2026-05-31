@@ -1944,60 +1944,123 @@
     }
 
     function buildOpponentProfile(roster, players) {
-      const starters = new Set(roster.starters || []);
+      const starterSet = new Set(roster.starters || []);
+      const taxiSet    = new Set(roster.taxi     || []);
+      const SKILL      = ['QB', 'RB', 'WR', 'TE'];
+      const targets    = { WR: 5, RB: 4, QB: 2, TE: 2 };
+      const ageOldCut  = { WR: 29, RB: 28, QB: 33, TE: 30 }; // avg age considered old for dynasty
+
       const allP = (roster.players || []).map(pid => {
         const p = players[pid];
         if (!p || !p.position) return null;
         return {
-          id: pid, position: p.position,
-          name: `${p.first_name} ${p.last_name}`,
-          team: p.team || 'FA', age: p.age || 0,
-          isStarter: starters.has(pid),
-          injury: mapInjury(p.injury_status),
+          id:        pid,
+          position:  p.position,
+          name:      `${p.first_name} ${p.last_name}`,
+          age:       p.age  || 0,
+          exp:       p.years_exp ?? 0,
+          isStarter: starterSet.has(pid),
+          isTaxi:    taxiSet.has(pid),
+          injury:    mapInjury(p.injury_status),
         };
       }).filter(Boolean);
 
-      const byPos = {};
-      allP.forEach(p => { (byPos[p.position] = byPos[p.position] || []).push(p); });
+      // ── Per-position stats ──────────────────────────────────
+      const posStats = {};
+      SKILL.forEach(pos => {
+        const group   = allP.filter(p => p.position === pos);
+        const active  = group.filter(p => !p.isTaxi);
+        const starts  = group.filter(p => p.isStarter);
+        const ages    = active.map(p => p.age).filter(a => a > 0);
+        const sAges   = starts.map(p => p.age).filter(a => a > 0);
+        posStats[pos] = {
+          total:        group.length,
+          active:       active.length,
+          starters:     starts.length,
+          taxi:         group.filter(p => p.isTaxi).length,
+          injured:      group.filter(p => p.injury).length,
+          avgAge:       ages.length   ? Math.round(ages.reduce((s,a) => s+a, 0) / ages.length * 10) / 10   : 0,
+          avgStarterAge:sAges.length  ? Math.round(sAges.reduce((s,a) => s+a, 0) / sAges.length * 10) / 10 : 0,
+          rookies:      active.filter(p => p.exp === 0).length,
+        };
+      });
 
-      // Roster grade
-      const wrCt = (byPos.WR||[]).length, rbCt = (byPos.RB||[]).length;
-      const injStarters = allP.filter(p => p.injury && p.isStarter).length;
+      const injuredTotal = allP.filter(p => p.injury).length;
+      const taxiTotal    = allP.filter(p => p.isTaxi).length;
+      const injStarters  = allP.filter(p => p.injury && p.isStarter).length;
+
+      // ── Roster grade ────────────────────────────────────────
       let score = 3;
-      if (injStarters === 0 && wrCt >= 5 && rbCt >= 4) score = 4;
+      const wrA = posStats.WR.active, rbA = posStats.RB.active;
+      if (injStarters === 0 && wrA >= 5 && rbA >= 4) score = 4;
       if (injStarters >= 2) score -= 2; else if (injStarters === 1) score -= 1;
-      if (wrCt < 3 || rbCt < 2) score -= 1;
+      if (wrA < 3 || rbA < 2) score -= 1;
       const grade = ['F','C','C','B','A'][Math.max(0, Math.min(4, score))];
 
-      // Top needs: positions with fewest players vs. typical dynasty counts
-      const targets = { WR: 5, RB: 4, QB: 2, TE: 2 };
-      const needScores = Object.entries(targets).map(([pos, min]) => ({
-        pos, gap: Math.max(0, min - (byPos[pos]||[]).length)
-      })).sort((a, b) => b.gap - a.gap).filter(n => n.gap > 0);
-      const topNeeds = needScores.slice(0, 3).map(n => n.pos);
+      // ── Need/surplus analysis per position ──────────────────
+      const posAnalysis = SKILL.map(pos => {
+        const st  = posStats[pos];
+        const gap = Math.max(0, targets[pos] - st.active);
+        const surplus = st.active >= targets[pos] + 2;
+        const needsYouth = st.avgAge > ageOldCut[pos] && st.active > 0;
+        // urgency: 3=critical, 2=high, 1=moderate (age), 0=fine
+        const urgency = gap >= 2 ? 3 : gap >= 1 ? 2 : needsYouth ? 1 : 0;
+        return { pos, gap, surplus, needsYouth, urgency, st };
+      }).sort((a, b) => b.urgency - a.urgency);
 
-      // Contention status from avg starter age
-      const skillStarters = allP.filter(p => p.isStarter && ['QB','RB','WR','TE'].includes(p.position));
+      const topNeeds = posAnalysis.filter(n => n.urgency > 0).slice(0, 3).map(n => n.pos);
+      const surplusPositions = posAnalysis.filter(n => n.surplus).map(n => n.pos);
+
+      // ── Contention status ───────────────────────────────────
+      const skillStarters = allP.filter(p => p.isStarter && SKILL.includes(p.position));
       const avgAge = skillStarters.length
         ? skillStarters.reduce((s, p) => s + (p.age || 25), 0) / skillStarters.length : 25;
       const contentionStatus = avgAge >= 27 ? 'CONTENDING' : avgAge <= 24 ? 'REBUILDING' : 'IN BETWEEN';
 
-      // Desperation
-      const maxGap = needScores[0]?.gap || 0;
-      const desperationLevel = maxGap >= 2 ? 'HIGH' : maxGap >= 1 ? 'MODERATE' : 'LOW';
+      // ── Desperation ─────────────────────────────────────────
+      const maxUrgency = posAnalysis[0]?.urgency || 0;
+      const desperationLevel = maxUrgency >= 3 ? 'HIGH' : maxUrgency >= 2 ? 'MODERATE' : maxUrgency >= 1 ? 'LOW' : 'NONE';
 
-      // Summary
-      const biggestNeed = topNeeds[0];
-      const surplusPos = Object.entries(byPos)
-        .filter(([pos, arr]) => ['RB','WR','QB'].includes(pos) && arr.length >= (targets[pos]||4) + 2)
-        .map(([pos]) => pos)[0];
-      let summary = biggestNeed
-        ? surplusPos
-          ? `This team needs ${biggestNeed} depth badly and has surplus ${surplusPos} — they are a motivated trade partner`
-          : `This team needs ${biggestNeed} depth — they are a motivated buyer in the trade market`
-        : `This team has solid depth across all positions and is less motivated to trade`;
+      // ── Specific observation sentences from actual numbers ──
+      const observations = [];
+      posAnalysis.forEach(({ pos, gap, surplus, needsYouth, urgency, st }) => {
+        if (urgency === 3) {
+          const ageNote = st.avgAge > 0 ? ` (avg age ${st.avgAge})` : '';
+          observations.push(`only ${st.active} ${pos}${st.active !== 1 ? 's' : ''} on active roster${ageNote} — critically thin`);
+        } else if (urgency === 2) {
+          const ageNote = st.avgAge > 0 ? ` averaging age ${st.avgAge}` : '';
+          observations.push(`${st.active} ${pos}s${ageNote} — needs another ${pos}`);
+        } else if (urgency === 1 && needsYouth) {
+          observations.push(`${st.active} ${pos}s averaging age ${st.avgAge} — has the bodies but needs younger ${pos} talent`);
+        }
+        if (surplus && st.avgAge > 0 && st.avgAge <= 26) {
+          observations.push(`${st.active} ${pos}s averaging age ${st.avgAge} (surplus, young) — likely motivated to move one for a need`);
+        } else if (surplus) {
+          observations.push(`surplus at ${pos} (${st.active} on roster) — potential trade bait`);
+        }
+      });
+      if (injStarters >= 2) observations.push(`${injStarters} current starters injured — motivated to add immediate production`);
 
-      return { grade, topNeeds, contentionStatus, desperationLevel, summary, avgAge: Math.round(avgAge * 10) / 10 };
+      const summary = observations.slice(0, 3).join('; ') ||
+        `Solid depth across all positions — less motivated to trade unless the value is exceptional`;
+
+      // ── Detailed breakdown string for AI prompt ─────────────
+      const posLines = SKILL.map(pos => {
+        const st = posStats[pos];
+        const parts = [`${st.active} active (${st.starters} starting)`];
+        if (st.taxi > 0)    parts.push(`${st.taxi} taxi`);
+        if (st.injured > 0) parts.push(`${st.injured} injured`);
+        if (st.avgAge > 0)  parts.push(`avg age ${st.avgAge}`);
+        if (st.rookies > 0) parts.push(`${st.rookies} rookie${st.rookies > 1 ? 's' : ''}`);
+        return `  ${pos}: ${parts.join(', ')}`;
+      }).join('\n');
+      const detailedBreakdown = `Position breakdown:\n${posLines}\nOverall: ${injuredTotal} injured, ${taxiTotal} on taxi, avg starter age ${Math.round(avgAge * 10) / 10}`;
+
+      return {
+        grade, topNeeds, surplusPositions, contentionStatus, desperationLevel,
+        summary, detailedBreakdown, posStats,
+        avgAge: Math.round(avgAge * 10) / 10,
+      };
     }
 
     function renderOpponentIntelHTML(profile, name) {
@@ -2005,20 +2068,42 @@
                        : profile.grade === 'C' ? '#fb923c' : 'var(--sit)';
       const despColor  = profile.desperationLevel === 'HIGH'     ? 'var(--sit)'
                        : profile.desperationLevel === 'MODERATE' ? '#fbbf24' : 'var(--text-3)';
+
+      // Position breakdown rows — each shows actual count + avg age + need/surplus flag
+      const SKILL = ['QB', 'RB', 'WR', 'TE'];
+      const targets = { WR: 5, RB: 4, QB: 2, TE: 2 };
+      const posRows = SKILL.map(pos => {
+        const st      = profile.posStats?.[pos];
+        if (!st) return '';
+        const isNeed    = profile.topNeeds.includes(pos);
+        const isSurplus = profile.surplusPositions?.includes(pos);
+        const flagColor = isNeed ? '#fbbf24' : isSurplus ? 'var(--start)' : 'var(--text-3)';
+        const flagText  = isNeed ? 'NEED' : isSurplus ? 'SURPLUS' : '';
+        const ageText   = st.avgAge > 0 ? `avg ${st.avgAge}` : '';
+        const injText   = st.injured > 0 ? ` · ${st.injured} inj` : '';
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span style="font-family:'DM Mono',monospace;letter-spacing:1px;color:${flagColor};width:28px">${pos}</span>
+            <span style="color:var(--text-2);flex:1">${st.active} active (${st.starters} starting)${injText}</span>
+            <span style="color:var(--text-3);margin:0 8px">${ageText}</span>
+            <span style="font-size:9px;color:${flagColor};letter-spacing:0.5px;width:46px;text-align:right">${flagText}</span>
+          </div>`;
+      }).join('');
+
       return `
         <div class="opp-card">
           <div class="opp-label">OPPONENT INTELLIGENCE${name ? ' — ' + escHtml(name.toUpperCase()) : ''}</div>
-          <div style="display:flex;align-items:center;gap:16px;margin:6px 0 10px">
+          <div style="display:flex;align-items:center;gap:14px;margin:6px 0 12px">
             <div class="opp-grade" style="color:${gradeColor}">${profile.grade}</div>
             <div style="flex:1">
-              <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:7px">
-                ${profile.topNeeds.map(pos => `<span class="opp-tag opp-need">${pos} NEEDED</span>`).join('')}
+              <div style="display:flex;gap:7px;flex-wrap:wrap">
                 <span class="opp-tag opp-neutral">${profile.contentionStatus}</span>
                 <span class="opp-tag" style="color:${despColor};border:1px solid ${despColor};background:color-mix(in srgb,${despColor} 10%,transparent)">${profile.desperationLevel} DESP</span>
               </div>
             </div>
           </div>
-          <div style="font-size:11px;color:var(--text-2);line-height:1.5;border-top:1px solid var(--border);padding-top:10px">${escHtml(profile.summary)}</div>
+          <div style="margin-bottom:12px">${posRows}</div>
+          <div style="font-size:11px;color:var(--text-2);line-height:1.55;padding-top:10px;border-top:1px solid var(--border)">${escHtml(profile.summary)}</div>
         </div>`;
     }
 
@@ -2147,7 +2232,7 @@
 
       // Opponent intelligence context — appended to prompt and schema when a partner is selected
       const opponentCtx = opponentProfile
-        ? `\n\nOPPONENT INTELLIGENCE (factor this into leverage and negotiation strategy):\nTeam: ${currentPartnerName}\nRoster grade: ${opponentProfile.grade}\nTop needs: ${opponentProfile.topNeeds.join(', ')||'none obvious'}\nStatus: ${opponentProfile.contentionStatus}\nDesperation: ${opponentProfile.desperationLevel}\nProfile: "${opponentProfile.summary}"\nUse this to identify their motivations, assess who holds leverage, and craft specific opening offer and walk-away advice.`
+        ? `\n\nOPPONENT INTELLIGENCE — use every data point below to craft specific, numbers-driven negotiation advice:\nTeam: ${currentPartnerName}\nRoster grade: ${opponentProfile.grade}\nStatus: ${opponentProfile.contentionStatus}\nDesperation: ${opponentProfile.desperationLevel}\n${opponentProfile.detailedBreakdown}\nTop needs: ${opponentProfile.topNeeds.join(', ')||'none'}\nSurplus positions: ${opponentProfile.surplusPositions?.join(', ')||'none'}\nRoster summary: "${opponentProfile.summary}"\nReference actual counts and ages in your negotiation coach output. Example: if they have 2 WRs averaging age 31, say exactly that.`
         : '';
       const negotiationSchema = opponentProfile
         ? `,"negotiation":{"opponent_need":"their biggest need in one phrase","opening_strategy":"should you lead with your best offer or test with a lesser offer first","ideal_ask":"your optimal ask — specific players and/or picks","walk_away":"the minimum you should accept before walking away"}`
