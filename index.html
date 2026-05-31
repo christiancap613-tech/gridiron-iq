@@ -92,6 +92,26 @@
       gap: 8px;
     }
 
+    /* League type badge (DYNASTY / REDRAFT) */
+    .league-type-badge {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    .badge-dynasty {
+      color: var(--start);
+      background: color-mix(in srgb, var(--start) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--start) 25%, transparent);
+    }
+    .badge-redraft {
+      color: var(--flex);
+      background: color-mix(in srgb, var(--flex) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--flex) 25%, transparent);
+    }
+
     /* Switch league button */
     .btn-switch {
       font-family: 'Bebas Neue', sans-serif;
@@ -834,6 +854,7 @@
       <div id="header-sub" class="logo-sub">DYNASTY · PPR · 2026</div>
     </div>
     <div class="header-right">
+      <div id="league-type-badge" class="league-type-badge hidden"></div>
       <button id="btn-switch-league" class="btn-switch hidden" onclick="switchLeague()">↗ SWITCH LEAGUE</button>
       <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light / dark">
         <div class="toggle-knob">☀</div>
@@ -999,6 +1020,7 @@
     let RBS            = [];    // live RB objects
     let QBS            = [];    // live QB objects
     let currentPosition = 'WR'; // active tab: 'WR' | 'RB' | 'QB'
+    let leagueType      = 'dynasty'; // 'dynasty' | 'redraft'
     let selectMode     = false;
     let selected       = [];
     let reportData     = { recs: [], outcomes: [] };
@@ -1222,11 +1244,18 @@
         document.getElementById('tab-rb').classList.remove('active');
         document.getElementById('tab-qb').classList.remove('active');
 
-        // Update header
+        // Detect league type
+        leagueType = league.settings?.type === 2 ? 'dynasty' : 'redraft';
+        const badge = document.getElementById('league-type-badge');
+        badge.textContent = leagueType.toUpperCase();
+        badge.className   = 'league-type-badge badge-' + leagueType;
+        badge.classList.remove('hidden');
+
+        // Update header + roster subtitle
         document.getElementById('header-sub').textContent = league.name.toUpperCase();
         document.getElementById('btn-switch-league').classList.remove('hidden');
-        document.getElementById('roster-sub').textContent =
-          (league.name + ' · WEEK 1 · 2026').toUpperCase();
+        const modeLabel = leagueType === 'dynasty' ? 'DYNASTY ANALYSIS' : 'REDRAFT ANALYSIS';
+        document.getElementById('roster-sub').textContent = `${modeLabel} · WEEK 1 · 2026`;
 
         // Reset any lingering roster state
         document.getElementById('error-box').classList.add('hidden');
@@ -1681,19 +1710,36 @@
 
       const userContext = (document.getElementById('analysis-context').value || '').trim();
 
-      const prompt = `Analyze these ${pos}s for dynasty PPR fantasy football Week 1 2026. Return ONLY valid JSON, no markdown.\n\n`
+      const isDynasty   = leagueType === 'dynasty';
+      const leagueLabel = isDynasty ? 'dynasty' : 'redraft single-season';
+
+      const prompt = `Analyze these ${pos}s for ${leagueLabel} PPR fantasy football Week 1 2026. Return ONLY valid JSON, no markdown.\n\n`
         + toAnalyze.map(w =>
             `${w.name}, ${w.team}, Age ${w.age || '?'}, ${w.exp === 0 ? 'Rookie' : 'Yr ' + w.exp}, ${w.status}${w.injury ? ', ' + w.injury : ''}`
           ).join('\n')
         + (userContext ? `\n\nADDITIONAL CONTEXT (prioritize this over your training data):\n${userContext}` : '');
 
-      const wrSystem = `You are GridironIQ, a direct dynasty PPR fantasy analyst. Be concise. Respond ONLY with valid JSON, no markdown fences, no text outside the object: {"week_narrative":"2 sentences max","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2 sentences max","key_factor":"one short phrase","risk":null}],"dynasty_insight":"one sentence"}`;
+      const SCHEMA = `{"week_narrative":"2 sentences max","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2 sentences max","key_factor":"one short phrase","risk":null}],"dynasty_insight":"one sentence"}`;
+      const BASE   = `Be concise. Respond ONLY with valid JSON, no markdown fences, no text outside the object: ${SCHEMA}`;
 
-      const rbSystem = `You are GridironIQ, a direct dynasty PPR fantasy analyst focused on running backs. Evaluate carry share, snap percentage, goal line usage and touchdown equity, PPR value from receptions, age-related decline curve (peak 22-27, steep drop after 30), injury risk profile, and offensive scheme fit. Be concise. Respond ONLY with valid JSON, no markdown fences, no text outside the object: {"week_narrative":"2 sentences max","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2 sentences max","key_factor":"one short phrase","risk":null}],"dynasty_insight":"one sentence"}`;
+      // ── Dynasty prompts ──────────────────────────────────────────────────────
+      const wrDynasty = `You are GridironIQ, a dynasty PPR analyst. Evaluate WRs on a 3-5 year lens: age curve (peak 24-28, meaningful drop after 30), contract and team stability, long-term target share trajectory, rookie development arc and upside ceiling, sell-high windows before age-related decline, and roster construction impact. ${BASE}`;
 
-      const qbSystem = `You are GridironIQ, a direct dynasty PPR fantasy analyst focused on quarterbacks. Evaluate passing volume and quality of receiving weapons, TD upside and red-zone usage, matchup vs opposing pass-rush DVOA and coverage scheme, mobility and rushing floor for dynasty scoring, age curve (QBs peak 27-33 and decline more gradually than skill positions — age 35+ relevant but not disqualifying), streaming value (one-week favorable matchup) vs dynasty value (long-term hold, age trajectory, team situation), and 2QB/Superflex league context vs 1QB leagues. Be concise. Respond ONLY with valid JSON, no markdown fences, no text outside the object: {"week_narrative":"2 sentences max","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2 sentences max","key_factor":"one short phrase","risk":null}],"dynasty_insight":"one sentence"}`;
+      const rbDynasty = `You are GridironIQ, a dynasty PPR analyst focused on running backs. Age is the #1 dynasty risk — evaluate: age curve (peak 22-27, steep cliff after 30), contract year vs extension situations, rookie upside and development timeline, sell-high windows, backfield hierarchy and long-term scheme fit, goal line usage, carry share trajectory, and PPR value from receptions. ${BASE}`;
 
-      const system = pos === 'RB' ? rbSystem : pos === 'QB' ? qbSystem : wrSystem;
+      const qbDynasty = `You are GridironIQ, a dynasty PPR analyst focused on quarterbacks. Evaluate: age curve (peak 27-33, gradual decline vs skill positions), franchise stability and long-term investment, contract situations, supporting cast trajectory (weapons, line), mobility floor for dynasty scoring, 2QB/Superflex league value, rookie ceiling vs veteran floor, and 3-5 year roster outlook. ${BASE}`;
+
+      // ── Redraft prompts ──────────────────────────────────────────────────────
+      const wrRedraft = `You are GridironIQ, a redraft PPR analyst. This is a single-season league — assign zero weight to age, long-term trajectory, or dynasty value. Evaluate WRs entirely on: this week's matchup (corner coverage, slot vs outside alignment), snap share and target volume trends over the last 3 games, current injury report status, hot/cold streaks, and game script with implied team totals. ${BASE}`;
+
+      const rbRedraft = `You are GridironIQ, a redraft PPR analyst focused on running backs. Single-season league — ignore age completely. Evaluate: this week's matchup vs run defense DVOA, snap share and carry trends over last 3 games, injury report status, hot/cold streak, game script and Vegas totals, goal line usage, and PPR value from pass-catching role. ${BASE}`;
+
+      const qbRedraft = `You are GridironIQ, a redraft PPR analyst focused on quarterbacks. Single-season league — ignore age and long-term value entirely. Evaluate: this week's matchup vs pass-rush DVOA and coverage scheme, hot/cold streak over last 3 games, injury report status, home vs away splits, weather and stadium factors, Vegas over/under and implied team totals, and streaming value vs season-long hold. ${BASE}`;
+
+      // ── Route by position × league type ─────────────────────────────────────
+      const system = isDynasty
+        ? (pos === 'RB' ? rbDynasty : pos === 'QB' ? qbDynasty : wrDynasty)
+        : (pos === 'RB' ? rbRedraft : pos === 'QB' ? qbRedraft : wrRedraft);
 
       try {
         const res = await fetch(WORKER_URL, {
