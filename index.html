@@ -1050,6 +1050,37 @@
       color: var(--accent); cursor: pointer; transition: all 0.2s ease;
     }
     .share-btn:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+    /* ── OPPONENT INTELLIGENCE ──────────────────────────────── */
+    .partner-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 13px; border-radius: 8px; cursor: pointer;
+      border: 1px solid var(--border); background: var(--bg-card-2);
+      transition: all 0.15s ease;
+    }
+    .partner-row:hover { border-color: #fbbf24; }
+    .partner-row.selected { border-color: #fbbf24; background: rgba(251,191,36,0.07); }
+    .partner-name { font-size: 12px; font-weight: 500; color: var(--text-1); transition: color 0.3s ease; }
+    .partner-meta { font-size: 10px; color: var(--text-3); margin-top: 2px; transition: color 0.3s ease; }
+    .opp-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(251,191,36,0.28);
+      border-left: 3px solid #fbbf24;
+      border-radius: 14px; padding: 14px 15px;
+      transition: background-color 0.3s ease;
+    }
+    .opp-label { font-size: 9px; color: #fbbf24; letter-spacing: 2px; margin-bottom: 10px; }
+    .opp-grade { font-family: 'Bebas Neue', sans-serif; font-size: 38px; line-height: 1; }
+    .opp-tag {
+      display: inline-flex; align-items: center;
+      font-size: 9px; letter-spacing: 0.5px; padding: 3px 8px; border-radius: 4px;
+    }
+    .opp-need { color:#fbbf24; background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.25); }
+    .opp-neutral { color:var(--text-2); background:var(--bg-card-2); border:1px solid var(--border); }
+    .neg-sub {
+      font-size: 9px; color: var(--text-3); letter-spacing: 1px;
+      margin-bottom: 3px; transition: color 0.3s ease;
+    }
   </style>
 </head>
 <body>
@@ -1265,6 +1296,11 @@
     let tradeSearchResultsG = []; // live search results giving
     let tradeSearchResultsR = []; // live search results receiving
     let tradeDebounce = null;
+    let leagueRosters      = []; // all rosters in current league
+    let leagueUsers        = []; // all users in current league
+    let selectedPartnerId  = null;
+    let currentPartnerName = '';
+    let opponentProfile    = null;
     let selectMode     = false;
     let selected       = [];
     let reportData     = { recs: [], outcomes: [] };
@@ -1462,15 +1498,18 @@
       const stepRoster = addLog('LOADING ROSTER...');
 
       try {
-        // Fetch rosters and player DB in parallel
-        const [rosters, players] = await Promise.all([
+        // Fetch rosters, player DB, and league users in parallel
+        const [rosters, players, users] = await Promise.all([
           fetch(`https://api.sleeper.app/v1/league/${league.league_id}/rosters`).then(r => r.json()),
           getPlayersData(),
+          fetch(`https://api.sleeper.app/v1/league/${league.league_id}/users`).then(r => r.json()),
         ]);
         if (stepDb) doneLog(stepDb);
         doneLog(stepRoster);
         addLog('ACCESS GRANTED', true);
-        playerDB = players; // store for trade search
+        playerDB      = players;      // full player DB for trade search
+        leagueRosters = rosters;      // all rosters for opponent intelligence
+        leagueUsers   = users || [];  // owner display names
         await sleep(500);
 
         // Find this user's roster
@@ -1780,6 +1819,7 @@
       lastPositionTab = currentPosition || 'WR';
       tradeGiving = []; tradeReceiving = [];
       tradeContext = 'CONTENDING'; tradeAnalysis = null;
+      selectedPartnerId = null; opponentProfile = null; currentPartnerName = '';
       ['wr','rb','qb'].forEach(t => document.getElementById('tab-' + t).classList.remove('active'));
       document.getElementById('tab-report').classList.remove('active');
       renderTradeSetup();
@@ -1825,6 +1865,28 @@
 
       const ctxBtn = ctx => `<button class="ctx-btn${tradeContext === ctx ? ' active' : ''}" onclick="setTradeCtx('${ctx}')">${ctx}</button>`;
 
+      // Build partner selector from cached league rosters
+      const partners = (leagueRosters || [])
+        .filter(r => r.owner_id && r.owner_id !== sleeperUser?.user_id)
+        .map(r => {
+          const u = (leagueUsers || []).find(u => u.user_id === r.owner_id);
+          return {
+            ownerId:  r.owner_id,
+            teamName: u?.metadata?.team_name || u?.display_name || u?.username || `Team ${r.roster_id}`,
+            username: u?.username || '',
+          };
+        });
+
+      const partnerRows = partners.map(p => `
+        <div class="partner-row${selectedPartnerId === p.ownerId ? ' selected' : ''}"
+          data-owner="${p.ownerId}" onclick="selectTradePartner('${p.ownerId}')">
+          <div>
+            <div class="partner-name">${escHtml(p.teamName)}</div>
+            ${p.username ? `<div class="partner-meta">@${escHtml(p.username)}</div>` : ''}
+          </div>
+          <span class="partner-check" style="color:#fbbf24;font-size:12px">${selectedPartnerId === p.ownerId ? '✓' : ''}</span>
+        </div>`).join('');
+
       document.getElementById('trade-setup-screen').innerHTML = `
         <div class="card" style="display:flex;justify-content:space-between;align-items:center">
           <div>
@@ -1833,6 +1895,14 @@
           </div>
           <button class="btn-text" style="width:auto;padding:6px 10px" onclick="closeTradeView()">← BACK</button>
         </div>
+        ${partners.length ? `
+        <div class="trade-section">
+          <div class="trade-section-label">SELECT TRADE PARTNER</div>
+          <div id="partner-list" style="display:flex;flex-direction:column;gap:6px">${partnerRows}</div>
+        </div>
+        <div id="opp-intel-card" class="${opponentProfile ? '' : 'hidden'}">
+          ${opponentProfile ? renderOpponentIntelHTML(opponentProfile, currentPartnerName) : ''}
+        </div>` : ''}
         ${section('giving',    'YOU GIVE',    'Search your roster…')}
         ${section('receiving', 'YOU RECEIVE', 'Search all NFL players…')}
         <div class="card">
@@ -1842,6 +1912,114 @@
           </div>
         </div>
         <button class="btn btn-primary" onclick="analyzeTrade()">ANALYZE TRADE →</button>`;
+    }
+
+    function selectTradePartner(ownerId) {
+      selectedPartnerId = ownerId;
+      // Highlight selected row without re-rendering the whole setup
+      document.querySelectorAll('.partner-row').forEach(row => {
+        const mine = row.dataset.owner === ownerId;
+        row.classList.toggle('selected', mine);
+        const chk = row.querySelector('.partner-check');
+        if (chk) chk.textContent = mine ? '✓' : '';
+      });
+      const roster = leagueRosters.find(r => r.owner_id === ownerId);
+      if (!roster) return;
+      const user = leagueUsers.find(u => u.user_id === ownerId);
+      currentPartnerName = user?.metadata?.team_name || user?.display_name || user?.username || `Team ${roster.roster_id}`;
+      opponentProfile = buildOpponentProfile(roster, playerDB);
+      updateOpponentCard();
+    }
+
+    function updateOpponentCard() {
+      const el = document.getElementById('opp-intel-card');
+      if (!el) return;
+      if (opponentProfile) {
+        el.innerHTML = renderOpponentIntelHTML(opponentProfile, currentPartnerName);
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+        el.innerHTML = '';
+      }
+    }
+
+    function buildOpponentProfile(roster, players) {
+      const starters = new Set(roster.starters || []);
+      const allP = (roster.players || []).map(pid => {
+        const p = players[pid];
+        if (!p || !p.position) return null;
+        return {
+          id: pid, position: p.position,
+          name: `${p.first_name} ${p.last_name}`,
+          team: p.team || 'FA', age: p.age || 0,
+          isStarter: starters.has(pid),
+          injury: mapInjury(p.injury_status),
+        };
+      }).filter(Boolean);
+
+      const byPos = {};
+      allP.forEach(p => { (byPos[p.position] = byPos[p.position] || []).push(p); });
+
+      // Roster grade
+      const wrCt = (byPos.WR||[]).length, rbCt = (byPos.RB||[]).length;
+      const injStarters = allP.filter(p => p.injury && p.isStarter).length;
+      let score = 3;
+      if (injStarters === 0 && wrCt >= 5 && rbCt >= 4) score = 4;
+      if (injStarters >= 2) score -= 2; else if (injStarters === 1) score -= 1;
+      if (wrCt < 3 || rbCt < 2) score -= 1;
+      const grade = ['F','C','C','B','A'][Math.max(0, Math.min(4, score))];
+
+      // Top needs: positions with fewest players vs. typical dynasty counts
+      const targets = { WR: 5, RB: 4, QB: 2, TE: 2 };
+      const needScores = Object.entries(targets).map(([pos, min]) => ({
+        pos, gap: Math.max(0, min - (byPos[pos]||[]).length)
+      })).sort((a, b) => b.gap - a.gap).filter(n => n.gap > 0);
+      const topNeeds = needScores.slice(0, 3).map(n => n.pos);
+
+      // Contention status from avg starter age
+      const skillStarters = allP.filter(p => p.isStarter && ['QB','RB','WR','TE'].includes(p.position));
+      const avgAge = skillStarters.length
+        ? skillStarters.reduce((s, p) => s + (p.age || 25), 0) / skillStarters.length : 25;
+      const contentionStatus = avgAge >= 27 ? 'CONTENDING' : avgAge <= 24 ? 'REBUILDING' : 'IN BETWEEN';
+
+      // Desperation
+      const maxGap = needScores[0]?.gap || 0;
+      const desperationLevel = maxGap >= 2 ? 'HIGH' : maxGap >= 1 ? 'MODERATE' : 'LOW';
+
+      // Summary
+      const biggestNeed = topNeeds[0];
+      const surplusPos = Object.entries(byPos)
+        .filter(([pos, arr]) => ['RB','WR','QB'].includes(pos) && arr.length >= (targets[pos]||4) + 2)
+        .map(([pos]) => pos)[0];
+      let summary = biggestNeed
+        ? surplusPos
+          ? `This team needs ${biggestNeed} depth badly and has surplus ${surplusPos} — they are a motivated trade partner`
+          : `This team needs ${biggestNeed} depth — they are a motivated buyer in the trade market`
+        : `This team has solid depth across all positions and is less motivated to trade`;
+
+      return { grade, topNeeds, contentionStatus, desperationLevel, summary, avgAge: Math.round(avgAge * 10) / 10 };
+    }
+
+    function renderOpponentIntelHTML(profile, name) {
+      const gradeColor = profile.grade === 'A' ? 'var(--start)' : profile.grade === 'B' ? '#fbbf24'
+                       : profile.grade === 'C' ? '#fb923c' : 'var(--sit)';
+      const despColor  = profile.desperationLevel === 'HIGH'     ? 'var(--sit)'
+                       : profile.desperationLevel === 'MODERATE' ? '#fbbf24' : 'var(--text-3)';
+      return `
+        <div class="opp-card">
+          <div class="opp-label">OPPONENT INTELLIGENCE${name ? ' — ' + escHtml(name.toUpperCase()) : ''}</div>
+          <div style="display:flex;align-items:center;gap:16px;margin:6px 0 10px">
+            <div class="opp-grade" style="color:${gradeColor}">${profile.grade}</div>
+            <div style="flex:1">
+              <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:7px">
+                ${profile.topNeeds.map(pos => `<span class="opp-tag opp-need">${pos} NEEDED</span>`).join('')}
+                <span class="opp-tag opp-neutral">${profile.contentionStatus}</span>
+                <span class="opp-tag" style="color:${despColor};border:1px solid ${despColor};background:color-mix(in srgb,${despColor} 10%,transparent)">${profile.desperationLevel} DESP</span>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-2);line-height:1.5;border-top:1px solid var(--border);padding-top:10px">${escHtml(profile.summary)}</div>
+        </div>`;
     }
 
     function setTradeCtx(ctx) {
@@ -1967,11 +2145,19 @@
       const isDynasty = leagueType === 'dynasty';
       const isContending = tradeContext === 'CONTENDING';
 
+      // Opponent intelligence context — appended to prompt and schema when a partner is selected
+      const opponentCtx = opponentProfile
+        ? `\n\nOPPONENT INTELLIGENCE (factor this into leverage and negotiation strategy):\nTeam: ${currentPartnerName}\nRoster grade: ${opponentProfile.grade}\nTop needs: ${opponentProfile.topNeeds.join(', ')||'none obvious'}\nStatus: ${opponentProfile.contentionStatus}\nDesperation: ${opponentProfile.desperationLevel}\nProfile: "${opponentProfile.summary}"\nUse this to identify their motivations, assess who holds leverage, and craft specific opening offer and walk-away advice.`
+        : '';
+      const negotiationSchema = opponentProfile
+        ? `,"negotiation":{"opponent_need":"their biggest need in one phrase","opening_strategy":"should you lead with your best offer or test with a lesser offer first","ideal_ask":"your optimal ask — specific players and/or picks","walk_away":"the minimum you should accept before walking away"}`
+        : '';
+
       // CONTENDING context adds a dedicated contention-window field to the schema
       const contendingSchema = isContending
         ? `,"contention_impact":"STRENGTHENS|MAINTAINS|WEAKENS — one sentence on this season's contention window impact"`
         : '';
-      const SCHEMA = `{"verdict":"one bold sentence","value_balance":"you_win_big|you_win|fair|they_win|they_win_big","leverage":"2 sentences on leverage","timing":"2 sentences on timing","counter_offer":"what to ask for instead or null","risk_flags":["up to 3 short risks"],"long_term":"one sentence impact"${contendingSchema}}`;
+      const SCHEMA = `{"verdict":"one bold sentence","value_balance":"you_win_big|you_win|fair|they_win|they_win_big","leverage":"2 sentences on leverage","timing":"2 sentences on timing","counter_offer":"what to ask for instead or null","risk_flags":["up to 3 short risks"],"long_term":"one sentence impact"${contendingSchema}${negotiationSchema}}`;
 
       // CONTENDING teams get specific starter-vs-depth framing injected into the system prompt
       const contendingInstructions = isContending
@@ -1984,7 +2170,7 @@
       const starterHint = isContending
         ? ` (starters flagged where known: ${tradeGiving.filter(i=>i.type==='player'&&i.status==='Starter').map(i=>i.name).join(', ')||'none confirmed'})`
         : '';
-      const prompt = `Evaluate this ${isDynasty?'dynasty':'redraft'} PPR trade:\nGIVING: ${_tradeGivingText}${starterHint}\nRECEIVING: ${_tradeReceivingText}\nContext: ${tradeContext}`;
+      const prompt = `Evaluate this ${isDynasty?'dynasty':'redraft'} PPR trade:\nGIVING: ${_tradeGivingText}${starterHint}\nRECEIVING: ${_tradeReceivingText}\nContext: ${tradeContext}${opponentCtx}`;
 
       try {
         const res = await fetch(WORKER_URL, {
@@ -2070,6 +2256,16 @@
         <div class="card">
           <div class="trade-insight-label">${leagueType==='dynasty'?'DYNASTY IMPACT':'SEASON IMPACT'}</div>
           <div class="trade-insight-text">${escHtml(data.long_term)}</div>
+        </div>` : ''}
+        ${data.negotiation ? `
+        <div class="card" style="border-left:3px solid #fbbf24">
+          <div class="trade-insight-label" style="color:#fbbf24">NEGOTIATION COACH</div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
+            ${data.negotiation.opponent_need ? `<div><div class="neg-sub">THEIR BIGGEST NEED</div><div class="trade-insight-text">${escHtml(data.negotiation.opponent_need)}</div></div>` : ''}
+            ${data.negotiation.opening_strategy ? `<div><div class="neg-sub">OPENING STRATEGY</div><div class="trade-insight-text">${escHtml(data.negotiation.opening_strategy)}</div></div>` : ''}
+            ${data.negotiation.ideal_ask ? `<div><div class="neg-sub">IDEAL ASK</div><div class="trade-insight-text">${escHtml(data.negotiation.ideal_ask)}</div></div>` : ''}
+            ${data.negotiation.walk_away ? `<div><div class="neg-sub">WALK AWAY POINT</div><div class="trade-insight-text">${escHtml(data.negotiation.walk_away)}</div></div>` : ''}
+          </div>
         </div>` : ''}
         <button class="share-btn" onclick="shareTradeResults()">↗ SHARE THIS ANALYSIS</button>
         <button class="btn btn-secondary" style="margin-top:0" onclick="showTradeSetupScreen()">↩ ANALYZE ANOTHER TRADE</button>
