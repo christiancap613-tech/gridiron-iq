@@ -1965,9 +1965,26 @@
         </div>`;
 
       const isDynasty = leagueType === 'dynasty';
-      const SCHEMA = `{"verdict":"one bold sentence","value_balance":"you_win_big|you_win|fair|they_win|they_win_big","leverage":"2 sentences on leverage","timing":"2 sentences on timing","counter_offer":"what to ask for instead or null","risk_flags":["up to 3 short risks"],"long_term":"one sentence impact"}`;
-      const system = `You are GridironIQ's trade negotiation coach for ${isDynasty?'dynasty':'redraft'} PPR fantasy. User is ${tradeContext}. Be direct and opinionated — act as a skilled negotiator not a value calculator. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
-      const prompt = `Evaluate this ${isDynasty?'dynasty':'redraft'} PPR trade:\nGIVING: ${_tradeGivingText}\nRECEIVING: ${_tradeReceivingText}\nContext: ${tradeContext}`;
+      const isContending = tradeContext === 'CONTENDING';
+
+      // CONTENDING context adds a dedicated contention-window field to the schema
+      const contendingSchema = isContending
+        ? `,"contention_impact":"STRENGTHENS|MAINTAINS|WEAKENS — one sentence on this season's contention window impact"`
+        : '';
+      const SCHEMA = `{"verdict":"one bold sentence","value_balance":"you_win_big|you_win|fair|they_win|they_win_big","leverage":"2 sentences on leverage","timing":"2 sentences on timing","counter_offer":"what to ask for instead or null","risk_flags":["up to 3 short risks"],"long_term":"one sentence impact"${contendingSchema}}`;
+
+      // CONTENDING teams get specific starter-vs-depth framing injected into the system prompt
+      const contendingInstructions = isContending
+        ? ` For this CONTENDING team, rigorously distinguish whether the asset being given away is a current starter or bench/depth piece — these are categorically different decisions. Trading a starter-caliber weapon for future assets is usually a mistake for a contender; shedding redundant depth for a need is smart. You must explicitly state in "contention_impact" whether this trade STRENGTHENS, MAINTAINS, or WEAKENS their contention window this season — weight in-season production impact above dynasty or long-term value when assessing this.`
+        : '';
+
+      const system = `You are GridironIQ's trade negotiation coach for ${isDynasty?'dynasty':'redraft'} PPR fantasy. User is ${tradeContext}.${contendingInstructions} Be direct and opinionated — act as a skilled negotiator not a value calculator. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
+
+      // Hint starter status to the model when CONTENDING so it can make the starter/depth distinction
+      const starterHint = isContending
+        ? ` (starters flagged where known: ${tradeGiving.filter(i=>i.type==='player'&&i.status==='Starter').map(i=>i.name).join(', ')||'none confirmed'})`
+        : '';
+      const prompt = `Evaluate this ${isDynasty?'dynasty':'redraft'} PPR trade:\nGIVING: ${_tradeGivingText}${starterHint}\nRECEIVING: ${_tradeReceivingText}\nContext: ${tradeContext}`;
 
       try {
         const res = await fetch(WORKER_URL, {
@@ -2009,6 +2026,18 @@
           <div class="narrative-label">VERDICT</div>
           <div class="verdict-text">${escHtml(data.verdict||'')}</div>
         </div>
+        ${data.contention_impact ? (() => {
+          const raw  = data.contention_impact || '';
+          const word = raw.split(/[\s—–-]/)[0].toUpperCase();
+          const color = word === 'STRENGTHENS' ? 'var(--start)'
+                      : word === 'WEAKENS'     ? 'var(--sit)'
+                      :                          'var(--flex)';
+          return `
+        <div class="card" style="border-left:3px solid ${color}">
+          <div class="trade-insight-label" style="color:${color}">CONTENTION WINDOW</div>
+          <div class="verdict-text" style="font-size:13px;margin-top:6px">${escHtml(raw)}</div>
+        </div>`;
+        })() : ''}
         <div class="card">
           <div class="narrative-label">VALUE BALANCE</div>
           <div class="value-scale-labels"><span>YOU WIN BIG</span><span>THEY WIN BIG</span></div>
