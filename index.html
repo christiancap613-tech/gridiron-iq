@@ -159,73 +159,139 @@
     .view { display: flex; flex-direction: column; gap: 10px; }
     .hidden { display: none !important; }
 
-    /* ── ONBOARDING / USERNAME SCREEN ───────────────────────── */
-    .onboard-card {
-      margin-top: 24px;
+    /* ── VAULT ONBOARDING ───────────────────────────────────── */
+    .vault-screen {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       padding: 40px 28px;
+      overflow: hidden;
+    }
+    /* Faint grid texture — dark on dark */
+    .vault-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,135,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,135,0.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+    .vault-brand {
+      position: relative;
       text-align: center;
+      margin-bottom: 48px;
+    }
+    .vault-wordmark {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 68px;
+      letter-spacing: 10px;
+      color: #ffffff;
+      line-height: 1;
+    }
+    .vault-wordmark span { color: #00ff87; }
+    .vault-tagline {
+      font-family: 'DM Mono', monospace;
+      font-size: 8px;
+      color: #00ff87;
+      letter-spacing: 3.5px;
+      margin-top: 12px;
+      opacity: 0.75;
+    }
+    .vault-form {
+      position: relative;
+      width: 100%;
+      max-width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .vault-input {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 14px 18px;
+      font-size: 13px;
+      color: #ffffff;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 2px;
+      outline: none;
+      text-align: center;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .vault-input::placeholder { color: #333; letter-spacing: 2px; }
+    .vault-input:focus {
+      border-color: #00ff87;
+      box-shadow: 0 0 0 1px rgba(0,255,135,0.25), 0 0 28px rgba(0,255,135,0.1);
+    }
+    .vault-unlock-btn {
+      width: 100%;
+      padding: 15px;
+      background: #00ff87;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 3.5px;
+      cursor: pointer;
+      transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    }
+    .vault-unlock-btn:hover {
+      opacity: 0.9;
+      box-shadow: 0 0 24px rgba(0,255,135,0.35);
+    }
+    .vault-unlock-btn:active { transform: scale(0.97); }
+
+    /* Inline error */
+    .inline-error {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: #ff4d6d;
+      text-align: center;
+      letter-spacing: 1px;
+      min-height: 16px;
+    }
+
+    /* ── VAULT LOADING LOG ──────────────────────────────────── */
+    .vault-brand-sm .vault-wordmark {
+      font-size: 20px;
+      letter-spacing: 4px;
+      color: rgba(255,255,255,0.25);
+    }
+    .vault-brand-sm .vault-wordmark span { color: rgba(0,255,135,0.4); }
+    .loading-log {
+      position: relative;
       display: flex;
       flex-direction: column;
       gap: 14px;
+      min-width: 260px;
+      max-width: 340px;
+    }
+    .log-line {
+      display: flex;
       align-items: center;
-    }
-    .onboard-wordmark {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 38px;
-      letter-spacing: 5px;
-      color: var(--text-1);
-      line-height: 1;
-    }
-    .onboard-wordmark span { color: var(--accent); }
-    .onboard-tagline {
-      font-size: 9px;
-      color: var(--text-3);
-      letter-spacing: 3px;
-      margin-top: -6px;
-    }
-    .onboard-divider {
-      width: 32px;
-      height: 1px;
-      background: var(--border);
-      margin: 6px 0;
-    }
-    .onboard-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 20px;
-      letter-spacing: 2px;
-      color: var(--text-1);
-    }
-    .onboard-desc {
-      font-size: 12px;
-      color: var(--text-2);
-      line-height: 1.7;
-      max-width: 320px;
-    }
-
-    /* Text input (username field) */
-    .text-input {
-      width: 100%;
-      background: var(--bg-card-2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 13px 16px;
-      font-size: 15px;
-      color: var(--text-1);
-      font-family: 'Inter', sans-serif;
-      outline: none;
-      text-align: center;
-      transition: border-color 0.2s ease, background-color 0.3s ease, color 0.3s ease;
-    }
-    .text-input::placeholder { color: var(--text-3); }
-    .text-input:focus { border-color: var(--accent); }
-
-    /* Inline error (username / league screens) */
-    .inline-error {
+      gap: 12px;
+      font-family: 'DM Mono', monospace;
       font-size: 11px;
-      color: var(--sit);
-      text-align: center;
-      min-height: 16px;
+      letter-spacing: 1.5px;
+      opacity: 0;
+      animation: logIn 0.3s ease forwards;
     }
+    @keyframes logIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .log-icon { width: 16px; flex-shrink: 0; text-align: center; font-size: 11px; }
+    .log-active { color: #ffffff; }
+    .log-done   { color: #00ff87; }
 
     /* ── LEAGUE SELECT SCREEN ───────────────────────────────── */
     .league-card {
@@ -782,27 +848,29 @@
 
       <!-- VIEW: USERNAME ENTRY ─────────────────────────────── -->
       <div id="view-username" class="view">
-        <div class="card onboard-card">
-          <div class="onboard-wordmark">GRIDIRON<span>IQ</span></div>
-          <div class="onboard-tagline">DYNASTY · PPR · AI-POWERED</div>
-          <div class="onboard-divider"></div>
-          <div class="onboard-title">CONNECT YOUR SLEEPER</div>
-          <div class="onboard-desc">Enter your Sleeper username to load your live dynasty roster and get AI-powered WR analysis.</div>
-          <input id="username-input" class="text-input" type="text"
-            placeholder="Sleeper username…"
-            autocomplete="off" autocapitalize="none" spellcheck="false"
-            onkeydown="if(event.key==='Enter')connectSleeper()"/>
-          <div id="username-error" class="inline-error hidden"></div>
-          <button class="btn btn-primary" onclick="connectSleeper()">CONNECT →</button>
+        <div class="vault-screen">
+          <div class="vault-brand">
+            <div class="vault-wordmark">GRIDIRON<span>IQ</span></div>
+            <div class="vault-tagline">FANTASY INTELLIGENCE. HELD ACCOUNTABLE.</div>
+          </div>
+          <div class="vault-form">
+            <input id="username-input" class="vault-input" type="text"
+              placeholder="SLEEPER USERNAME"
+              autocomplete="off" autocapitalize="none" spellcheck="false"
+              onkeydown="if(event.key==='Enter')connectSleeper()"/>
+            <div id="username-error" class="inline-error hidden"></div>
+            <button class="vault-unlock-btn" onclick="connectSleeper()">UNLOCK →</button>
+          </div>
         </div>
       </div>
 
       <!-- VIEW: LOADING (Sleeper API) ──────────────────────── -->
       <div id="view-loading" class="hidden">
-        <div class="analyzing-wrap">
-          <div class="spinner"></div>
-          <div id="loading-title" class="analyzing-title">LOADING</div>
-          <div id="loading-sub" class="analyzing-sub">CONNECTING TO SLEEPER</div>
+        <div class="vault-screen">
+          <div class="vault-brand vault-brand-sm">
+            <div class="vault-wordmark">GRIDIRON<span>IQ</span></div>
+          </div>
+          <div id="loading-log" class="loading-log"></div>
         </div>
       </div>
 
@@ -951,11 +1019,20 @@
       document.getElementById('view-' + v).classList.remove('hidden');
     }
 
-    /* ── LOADING HELPER ─────────────────────────────────────── */
-    function setLoading(title, sub) {
-      document.getElementById('loading-title').textContent = title;
-      document.getElementById('loading-sub').textContent   = sub;
-      showView('loading');
+    /* ── VAULT LOG HELPERS ──────────────────────────────────── */
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    function clearLog() { document.getElementById('loading-log').innerHTML = ''; }
+    function addLog(text, done = false) {
+      const div = document.createElement('div');
+      div.className = 'log-line ' + (done ? 'log-done' : 'log-active');
+      div.innerHTML = `<span class="log-icon">${done ? '✓' : '›'}</span><span>${text}</span>`;
+      document.getElementById('loading-log').appendChild(div);
+      return div;
+    }
+    function doneLog(line) {
+      if (!line) return;
+      line.classList.replace('log-active', 'log-done');
+      line.querySelector('.log-icon').textContent = '✓';
     }
 
     /* ── ERROR HELPERS ──────────────────────────────────────── */
@@ -1022,10 +1099,12 @@
       if (!username) { showUsernameError('Enter your Sleeper username.'); return; }
 
       clearUsernameError();
-      setLoading('FETCHING PROFILE', 'CONNECTING TO SLEEPER');
+      clearLog();
+      showView('loading');
 
       try {
-        // 1 — resolve user
+        // Step 1 — verify identity
+        const step1 = addLog('VERIFYING IDENTITY...');
         const userRes  = await fetch(`https://api.sleeper.app/v1/user/${encodeURIComponent(username)}`);
         const userData = await userRes.json();
         if (!userData?.user_id) throw new Error(`Username "${username}" not found on Sleeper.`);
@@ -1033,10 +1112,14 @@
         sleeperUser = userData;
         localStorage.setItem('giq_username', username);
         document.getElementById('user-badge').textContent = '@' + username;
-        saveUser(username); // persist to Supabase (no league yet)
+        saveUser(username);
 
-        // 2 — fetch 2026 leagues
-        setLoading('FETCHING LEAGUES', 'LOADING YOUR 2026 SEASON');
+        doneLog(step1);
+        addLog(`@${username} — IDENTITY CONFIRMED`, true);
+        if (!silent) await sleep(700);
+
+        // Step 2 — scan leagues
+        const step2 = addLog('SCANNING LEAGUES...');
         const leaguesRes  = await fetch(`https://api.sleeper.app/v1/user/${userData.user_id}/leagues/nfl/2026`);
         const leaguesData = await leaguesRes.json();
 
@@ -1044,14 +1127,21 @@
           throw new Error('No 2026 NFL leagues found for this account.');
 
         sleeperLeagues = leaguesData;
+        doneLog(step2);
+        addLog(`${leaguesData.length} LEAGUE${leaguesData.length !== 1 ? 'S' : ''} FOUND`, true);
 
-        // 3 — try to auto-restore last selected league
+        // Step 3 — auto-restore or show picker
         const savedId = localStorage.getItem('giq_league_id');
         if (savedId) {
           const saved = sleeperLeagues.find(l => l.league_id === savedId);
-          if (saved) { await selectLeague(saved); return; }
+          if (saved) {
+            if (!silent) await sleep(350);
+            await selectLeague(saved);
+            return;
+          }
         }
 
+        if (!silent) await sleep(400);
         renderLeagues();
         showView('leagues');
 
@@ -1086,9 +1176,24 @@
     async function selectLeague(league) {
       currentLeague = league;
       localStorage.setItem('giq_league_id', league.league_id);
-      saveUser(sleeperUser?.username, league.league_id); // update league in Supabase
+      saveUser(sleeperUser?.username, league.league_id);
 
-      setLoading('LOADING ROSTER', 'FETCHING YOUR PLAYERS');
+      // If called directly from league picker the log is empty — start fresh
+      if (document.getElementById('view-loading').classList.contains('hidden')) {
+        clearLog();
+        showView('loading');
+      }
+
+      // Pre-check player DB cache so we can show the download step if needed
+      let needsDownload = false;
+      try {
+        const raw = localStorage.getItem(PLAYER_CACHE_KEY);
+        const cached = raw ? JSON.parse(raw) : null;
+        needsDownload = !cached || (Date.now() - cached.ts >= PLAYER_CACHE_TTL);
+      } catch {}
+
+      const stepDb     = needsDownload ? addLog('DOWNLOADING PLAYER DATABASE...') : null;
+      const stepRoster = addLog('LOADING ROSTER...');
 
       try {
         // Fetch rosters and player DB in parallel
@@ -1096,6 +1201,10 @@
           fetch(`https://api.sleeper.app/v1/league/${league.league_id}/rosters`).then(r => r.json()),
           getPlayersData(),
         ]);
+        if (stepDb) doneLog(stepDb);
+        doneLog(stepRoster);
+        addLog('ACCESS GRANTED', true);
+        await sleep(500);
 
         // Find this user's roster
         const myRoster = rosters.find(r => r.owner_id === sleeperUser.user_id);
@@ -1150,7 +1259,6 @@
         }
       } catch (e) { /* corrupt cache — re-fetch */ }
 
-      setLoading('DOWNLOADING PLAYERS', 'THIS ONLY HAPPENS ONCE PER DAY');
       const all = await fetch('https://api.sleeper.app/v1/players/nfl').then(r => r.json());
 
       // Store only skill positions to stay within localStorage limits (~5 MB)
