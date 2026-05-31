@@ -663,7 +663,7 @@
       transition: color 0.2s ease;
     }
     .nav-tab.active { color: var(--accent); cursor: pointer; }
-    #tab-wr, #tab-rb, #tab-report { cursor: pointer; }
+    #tab-wr, #tab-rb, #tab-qb, #tab-report { cursor: pointer; }
     .nav-icon { font-size: 15px; line-height: 1; }
 
     /* ── REPORT VIEW ────────────────────────────────────────── */
@@ -907,7 +907,7 @@
   <nav class="bottom-nav">
     <button id="tab-wr" class="nav-tab active" onclick="switchPosition('WR')"><span class="nav-icon">↔</span>WR</button>
     <button id="tab-rb" class="nav-tab" onclick="switchPosition('RB')"><span class="nav-icon">◈</span>RB</button>
-    <button class="nav-tab"><span class="nav-icon">◎</span>QB</button>
+    <button id="tab-qb" class="nav-tab" onclick="switchPosition('QB')"><span class="nav-icon">◎</span>QB</button>
     <button id="tab-report" class="nav-tab" onclick="showReport()"><span class="nav-icon">◎</span>REPORT</button>
   </nav>
 
@@ -929,7 +929,8 @@
     let currentLeague  = null;  // selected league
     let WRS            = [];    // live WR objects
     let RBS            = [];    // live RB objects
-    let currentPosition = 'WR'; // active tab: 'WR' | 'RB'
+    let QBS            = [];    // live QB objects
+    let currentPosition = 'WR'; // active tab: 'WR' | 'RB' | 'QB'
     let selectMode     = false;
     let selected       = [];
     let reportData     = { recs: [], outcomes: [] };
@@ -1102,13 +1103,15 @@
 
         WRS = buildWRArray(myRoster, players);
         RBS = buildRBArray(myRoster, players);
-        if (WRS.length === 0 && RBS.length === 0)
-          throw new Error('No WRs or RBs found on your roster in this league.');
+        QBS = buildQBArray(myRoster, players);
+        if (WRS.length === 0 && RBS.length === 0 && QBS.length === 0)
+          throw new Error('No skill players found on your roster in this league.');
 
         // Reset to WR tab
         currentPosition = 'WR';
         document.getElementById('tab-wr').classList.add('active');
         document.getElementById('tab-rb').classList.remove('active');
+        document.getElementById('tab-qb').classList.remove('active');
 
         // Update header
         document.getElementById('header-sub').textContent = league.name.toUpperCase();
@@ -1220,6 +1223,34 @@
         });
     }
 
+    /* ── BUILD QB ARRAY FROM SLEEPER ROSTER ─────────────────── */
+    function buildQBArray(roster, players) {
+      const starters = new Set(roster.starters || []);
+      const taxi     = new Set(roster.taxi     || []);
+
+      return (roster.players || [])
+        .map(pid => {
+          const p = players[pid];
+          if (!p || p.position !== 'QB') return null;
+          return {
+            id:     pid,
+            name:   `${p.first_name} ${p.last_name}`,
+            team:   p.team  || 'FA',
+            age:    p.age   || 0,
+            exp:    p.years_exp ?? 0,
+            status: starters.has(pid) ? 'Starter' : taxi.has(pid) ? 'Taxi' : 'Bench',
+            injury: mapInjury(p.injury_status),
+            depth:  p.depth_chart_order ?? 999,
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+          const o = { Starter: 0, Bench: 1, Taxi: 2 };
+          const byStatus = (o[a.status] ?? 1) - (o[b.status] ?? 1);
+          return byStatus !== 0 ? byStatus : a.depth - b.depth;
+        });
+    }
+
     /* Maps Sleeper injury_status strings → short badge text */
     function mapInjury(raw) {
       if (!raw) return null;
@@ -1275,7 +1306,9 @@
     }
 
     /* ── POSITION HELPERS ───────────────────────────────────── */
-    function getActiveRoster() { return currentPosition === 'WR' ? WRS : RBS; }
+    function getActiveRoster() {
+      return currentPosition === 'WR' ? WRS : currentPosition === 'RB' ? RBS : QBS;
+    }
 
     function analyzeAll() { analyze(getActiveRoster()); }
 
@@ -1285,10 +1318,11 @@
 
       document.getElementById('tab-wr').classList.toggle('active', pos === 'WR');
       document.getElementById('tab-rb').classList.toggle('active', pos === 'RB');
+      document.getElementById('tab-qb').classList.toggle('active', pos === 'QB');
       document.getElementById('tab-report').classList.remove('active');
 
-      const label = pos === 'WR' ? 'YOUR WIDE RECEIVERS' : 'YOUR RUNNING BACKS';
-      document.getElementById('roster-title').textContent  = label;
+      const labels = { WR: 'YOUR WIDE RECEIVERS', RB: 'YOUR RUNNING BACKS', QB: 'YOUR QUARTERBACKS' };
+      document.getElementById('roster-title').textContent    = labels[pos] || `YOUR ${pos}s`;
       document.getElementById('btn-analyze-all').textContent = `ANALYZE ALL ${pos}s`;
 
       // Reset select mode
@@ -1549,7 +1583,9 @@
 
       const rbSystem = `You are GridironIQ, a direct dynasty PPR fantasy analyst focused on running backs. Evaluate carry share, snap percentage, goal line usage and touchdown equity, PPR value from receptions, age-related decline curve (peak 22-27, steep drop after 30), injury risk profile, and offensive scheme fit. Be concise. Respond ONLY with valid JSON, no markdown fences, no text outside the object: {"week_narrative":"2 sentences max","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2 sentences max","key_factor":"one short phrase","risk":null}],"dynasty_insight":"one sentence"}`;
 
-      const system = pos === 'RB' ? rbSystem : wrSystem;
+      const qbSystem = `You are GridironIQ, a direct dynasty PPR fantasy analyst focused on quarterbacks. Evaluate passing volume and quality of receiving weapons, TD upside and red-zone usage, matchup vs opposing pass-rush DVOA and coverage scheme, mobility and rushing floor for dynasty scoring, age curve (QBs peak 27-33 and decline more gradually than skill positions — age 35+ relevant but not disqualifying), streaming value (one-week favorable matchup) vs dynasty value (long-term hold, age trajectory, team situation), and 2QB/Superflex league context vs 1QB leagues. Be concise. Respond ONLY with valid JSON, no markdown fences, no text outside the object: {"week_narrative":"2 sentences max","roster_grade":"A-F grade + one sentence","recommendations":[{"player_name":"string","decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2 sentences max","key_factor":"one short phrase","risk":null}],"dynasty_insight":"one sentence"}`;
+
+      const system = pos === 'RB' ? rbSystem : pos === 'QB' ? qbSystem : wrSystem;
 
       try {
         const res = await fetch(WORKER_URL, {
