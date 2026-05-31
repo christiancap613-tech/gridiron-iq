@@ -928,6 +928,128 @@
     }
     .grade-inactive { opacity: 0.28; }
     .report-loading { display: flex; justify-content: center; padding: 12px 0; }
+
+    /* ── TRADE ANALYZER ─────────────────────────────────────── */
+    .trade-section {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 15px;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .trade-section-label {
+      font-family: 'Bebas Neue', sans-serif; font-size: 11px;
+      letter-spacing: 2px; color: var(--text-3); margin-bottom: 10px;
+      transition: color 0.3s ease;
+    }
+    .trade-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+    .trade-chip {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--bg-card-2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 8px; font-size: 11px; color: var(--text-1);
+      transition: all 0.3s ease;
+    }
+    .trade-chip-x {
+      background: none; border: none; color: var(--text-3);
+      cursor: pointer; font-size: 14px; line-height: 1; padding: 0 0 0 2px;
+    }
+    .trade-chip-x:hover { color: var(--sit); }
+    .trade-search-input {
+      width: 100%; background: var(--bg-card-2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 13px; font-size: 12px; color: var(--text-1);
+      font-family: 'Inter', sans-serif; outline: none;
+      transition: border-color 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+    .trade-search-input::placeholder { color: var(--text-3); }
+    .trade-search-input:focus { border-color: var(--accent); }
+    .trade-results-list {
+      background: var(--bg-card-2); border: 1px solid var(--border);
+      border-radius: 8px; margin-top: 4px; max-height: 190px; overflow-y: auto;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .trade-result-row {
+      display: flex; align-items: center; gap: 9px;
+      padding: 9px 13px; cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background-color 0.15s;
+    }
+    .trade-result-row:last-child { border-bottom: none; }
+    .trade-result-row:hover { background: var(--bg-card); }
+    .trade-result-name { font-size: 12px; color: var(--text-1); }
+    .trade-result-meta { font-size: 10px; color: var(--text-3); }
+    .trade-add-pick {
+      background: none; border: 1px dashed var(--border);
+      border-radius: 8px; padding: 8px 13px; width: 100%; margin-top: 8px;
+      font-family: 'Bebas Neue', sans-serif; font-size: 10px; letter-spacing: 1.5px;
+      color: var(--text-3); cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .trade-add-pick:hover { border-color: var(--accent); color: var(--accent); }
+    .trade-pick-form {
+      display: flex; gap: 8px; margin-top: 8px; align-items: center;
+    }
+    .trade-pick-sel {
+      flex: 1; background: var(--bg-card-2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 10px; font-size: 11px; color: var(--text-1);
+      font-family: 'Inter', sans-serif; outline: none;
+      transition: all 0.3s ease;
+    }
+    .trade-pick-confirm {
+      background: var(--accent); color: var(--bg); border: none;
+      border-radius: 8px; padding: 8px 14px;
+      font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 1.5px;
+      cursor: pointer; white-space: nowrap;
+    }
+    .context-toggle { display: flex; gap: 8px; }
+    .ctx-btn {
+      flex: 1; padding: 10px 4px; background: var(--bg-card-2);
+      border: 1px solid var(--border); border-radius: 8px;
+      font-family: 'Bebas Neue', sans-serif; font-size: 10px; letter-spacing: 1.5px;
+      color: var(--text-3); cursor: pointer; transition: all 0.2s ease;
+    }
+    .ctx-btn.active {
+      border-color: var(--accent); color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+    }
+    /* Results */
+    .verdict-card { border-left: 3px solid var(--accent); }
+    .verdict-text { font-size: 15px; font-weight: 600; color: var(--text-1); line-height: 1.4; transition: color 0.3s ease; }
+    .value-scale-track {
+      width: 100%; height: 6px; background: var(--border);
+      border-radius: 3px; position: relative; margin: 10px 0 4px;
+      transition: background-color 0.3s ease;
+    }
+    .value-scale-marker {
+      position: absolute; top: -5px;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--bg-card);
+      transform: translateX(-50%);
+      transition: left 0.6s ease, background-color 0.3s ease;
+    }
+    .value-scale-labels {
+      display: flex; justify-content: space-between;
+      font-size: 9px; color: var(--text-3); letter-spacing: 1px;
+      transition: color 0.3s ease;
+    }
+    .value-verdict {
+      font-family: 'Bebas Neue', sans-serif; font-size: 16px;
+      letter-spacing: 2px; text-align: center; margin-top: 6px;
+    }
+    .trade-insight-label {
+      font-size: 9px; color: var(--accent); letter-spacing: 2px;
+      margin-bottom: 6px; transition: color 0.3s ease;
+    }
+    .trade-insight-text {
+      font-size: 12px; color: var(--text-2); line-height: 1.6;
+      transition: color 0.3s ease;
+    }
+    .risk-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text-2); line-height: 1.5; }
+    .risk-pip { width: 6px; height: 6px; border-radius: 50%; background: var(--flex); flex-shrink: 0; margin-top: 5px; }
+    .share-btn {
+      width: 100%; padding: 14px; background: var(--bg-card-2);
+      border: 1px solid var(--accent); border-radius: 12px;
+      font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 2.5px;
+      color: var(--accent); cursor: pointer; transition: all 0.2s ease;
+    }
+    .share-btn:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
   </style>
 </head>
 <body>
@@ -940,6 +1062,7 @@
     </div>
     <div class="header-right">
       <div id="league-type-badge" class="league-type-badge hidden"></div>
+      <button id="btn-trade" class="btn-switch hidden" onclick="showTradeView()" style="color:var(--flex);border-color:color-mix(in srgb,var(--flex) 30%,transparent)">⇄ TRADE</button>
       <button id="btn-full-roster" class="btn-switch hidden" onclick="showFullRoster()" style="color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">⊞ ROSTER</button>
       <button id="btn-switch-league" class="btn-switch hidden" onclick="switchLeague()">↗ SWITCH</button>
       <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light / dark">
@@ -1075,6 +1198,12 @@
         <div id="report-body"></div>
       </div>
 
+      <!-- VIEW: TRADE ANALYZER ───────────────────────────────── -->
+      <div id="view-trade" class="view hidden">
+        <div id="trade-setup-screen"></div>
+        <div id="trade-results-screen" class="hidden"></div>
+      </div>
+
       <!-- VIEW: FULL ROSTER ─────────────────────────────────── -->
       <div id="view-fullroster" class="view hidden">
         <div id="fullroster-health" class="card narrative-card"></div>
@@ -1124,7 +1253,18 @@
     let currentPosition = 'WR'; // active tab: 'WR' | 'RB' | 'QB'
     let leagueType      = 'dynasty'; // 'dynasty' | 'redraft'
     let ALL_PLAYERS     = []; // full roster, all positions
-    let lastPositionTab = 'WR'; // tab to return to from full roster
+    let lastPositionTab = 'WR'; // tab to return to from full roster / trade
+    let playerDB        = {}; // full Sleeper player DB for trade search
+    // trade state
+    let tradeGiving    = [];
+    let tradeReceiving = [];
+    let tradeContext   = 'CONTENDING';
+    let tradeAnalysis  = null;
+    let _tradeGivingText   = '';
+    let _tradeReceivingText = '';
+    let tradeSearchResultsG = []; // live search results giving
+    let tradeSearchResultsR = []; // live search results receiving
+    let tradeDebounce = null;
     let selectMode     = false;
     let selected       = [];
     let reportData     = { recs: [], outcomes: [] };
@@ -1139,7 +1279,7 @@
 
     /* ── VIEW ROUTER ────────────────────────────────────────── */
     function showView(v) {
-      ['username','loading','leagues','roster','analyzing','results','report','fullroster'].forEach(n =>
+      ['username','loading','leagues','roster','analyzing','results','report','fullroster','trade'].forEach(n =>
         document.getElementById('view-' + n).classList.add('hidden')
       );
       document.getElementById('view-' + v).classList.remove('hidden');
@@ -1330,6 +1470,7 @@
         if (stepDb) doneLog(stepDb);
         doneLog(stepRoster);
         addLog('ACCESS GRANTED', true);
+        playerDB = players; // store for trade search
         await sleep(500);
 
         // Find this user's roster
@@ -1360,6 +1501,7 @@
         document.getElementById('header-sub').textContent = league.name.toUpperCase();
         document.getElementById('btn-switch-league').classList.remove('hidden');
         document.getElementById('btn-full-roster').classList.remove('hidden');
+        document.getElementById('btn-trade').classList.remove('hidden');
         const modeLabel = leagueType === 'dynasty' ? 'DYNASTY ANALYSIS' : 'REDRAFT ANALYSIS';
         document.getElementById('roster-sub').textContent = `${modeLabel} · WEEK 1 · 2026`;
 
@@ -1631,6 +1773,322 @@
         selectMode ? 'CANCEL' : `SELECT ${currentPosition}s`;
       document.querySelectorAll('.wr-card').forEach(c => c.classList.remove('selected'));
       document.getElementById('btn-analyze-selected').style.display = 'none';
+    }
+
+    /* ── TRADE ANALYZER ─────────────────────────────────────── */
+    function showTradeView() {
+      lastPositionTab = currentPosition || 'WR';
+      tradeGiving = []; tradeReceiving = [];
+      tradeContext = 'CONTENDING'; tradeAnalysis = null;
+      ['wr','rb','qb'].forEach(t => document.getElementById('tab-' + t).classList.remove('active'));
+      document.getElementById('tab-report').classList.remove('active');
+      renderTradeSetup();
+      document.getElementById('trade-results-screen').classList.add('hidden');
+      document.getElementById('trade-setup-screen').classList.remove('hidden');
+      showView('trade');
+    }
+
+    function closeTradeView() { switchPosition(lastPositionTab || 'WR'); }
+
+    function showTradeSetupScreen() {
+      document.getElementById('trade-results-screen').classList.add('hidden');
+      renderTradeSetup();
+      document.getElementById('trade-setup-screen').classList.remove('hidden');
+    }
+
+    function renderTradeSetup() {
+      const chips = (items, side) => items.length ? `<div class="trade-chips">${
+        items.map((it, i) => it.type === 'player'
+          ? `<div class="trade-chip"><span class="pos-badge pos-${it.position.toLowerCase()}">${it.position}</span>${escHtml(it.name)}<button class="trade-chip-x" onclick="removeTradeItem('${side}',${i})">×</button></div>`
+          : `<div class="trade-chip"><span style="color:var(--flex);font-size:9px;font-family:'DM Mono',monospace;letter-spacing:1px">${escHtml(it.label)}</span><button class="trade-chip-x" onclick="removeTradeItem('${side}',${i})">×</button></div>`
+        ).join('')
+      }</div>` : '';
+
+      const section = (side, label, placeholder) => `
+        <div class="trade-section">
+          <div class="trade-section-label">${label}</div>
+          <div id="chips-${side}">${chips(side === 'giving' ? tradeGiving : tradeReceiving, side)}</div>
+          <input id="search-${side}" class="trade-search-input" placeholder="${placeholder}"
+            oninput="tradeSearch('${side}',this.value)" autocomplete="off" autocapitalize="none" spellcheck="false"/>
+          <div id="results-${side}" class="trade-results-list hidden"></div>
+          <button class="trade-add-pick" onclick="togglePickForm('${side}')">＋ ADD DRAFT PICK</button>
+          <div id="pick-form-${side}" class="trade-pick-form hidden">
+            <select id="pick-yr-${side}" class="trade-pick-sel">
+              <option>2026</option><option>2027</option><option>2028</option>
+            </select>
+            <select id="pick-rd-${side}" class="trade-pick-sel">
+              <option>1st</option><option>2nd</option><option>3rd</option>
+            </select>
+            <button class="trade-pick-confirm" onclick="addTradePick('${side}')">ADD</button>
+          </div>
+        </div>`;
+
+      const ctxBtn = ctx => `<button class="ctx-btn${tradeContext === ctx ? ' active' : ''}" onclick="setTradeCtx('${ctx}')">${ctx}</button>`;
+
+      document.getElementById('trade-setup-screen').innerHTML = `
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="section-title">TRADE ANALYZER</div>
+            <div class="section-sub">${leagueType.toUpperCase()} · ${tradeContext}</div>
+          </div>
+          <button class="btn-text" style="width:auto;padding:6px 10px" onclick="closeTradeView()">← BACK</button>
+        </div>
+        ${section('giving',    'YOU GIVE',    'Search your roster…')}
+        ${section('receiving', 'YOU RECEIVE', 'Search all NFL players…')}
+        <div class="card">
+          <div class="trade-section-label">YOUR ROSTER CONTEXT</div>
+          <div class="context-toggle">
+            ${ctxBtn('CONTENDING')}${ctxBtn('IN BETWEEN')}${ctxBtn('REBUILDING')}
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="analyzeTrade()">ANALYZE TRADE →</button>`;
+    }
+
+    function setTradeCtx(ctx) {
+      tradeContext = ctx;
+      document.querySelectorAll('.ctx-btn').forEach(b => b.classList.toggle('active', b.textContent === ctx));
+      document.querySelector('#trade-setup-screen .section-sub').textContent = `${leagueType.toUpperCase()} · ${ctx}`;
+    }
+
+    function togglePickForm(side) {
+      const el = document.getElementById('pick-form-' + side);
+      el.classList.toggle('hidden');
+    }
+
+    function addTradePick(side) {
+      const yr = document.getElementById('pick-yr-' + side).value;
+      const rd = document.getElementById('pick-rd-' + side).value;
+      const item = { type: 'pick', label: `${yr} ${rd}` };
+      (side === 'giving' ? tradeGiving : tradeReceiving).push(item);
+      document.getElementById('pick-form-' + side).classList.add('hidden');
+      refreshTradeChips(side);
+    }
+
+    function removeTradeItem(side, idx) {
+      const arr = side === 'giving' ? tradeGiving : tradeReceiving;
+      arr.splice(idx, 1);
+      refreshTradeChips(side);
+    }
+
+    function refreshTradeChips(side) {
+      const items = side === 'giving' ? tradeGiving : tradeReceiving;
+      const chips = items.map((it, i) => it.type === 'player'
+        ? `<div class="trade-chip"><span class="pos-badge pos-${it.position.toLowerCase()}">${it.position}</span>${escHtml(it.name)}<button class="trade-chip-x" onclick="removeTradeItem('${side}',${i})">×</button></div>`
+        : `<div class="trade-chip"><span style="color:var(--flex);font-size:9px;font-family:'DM Mono',monospace;letter-spacing:1px">${escHtml(it.label)}</span><button class="trade-chip-x" onclick="removeTradeItem('${side}',${i})">×</button></div>`
+      ).join('');
+      const el = document.getElementById('chips-' + side);
+      if (el) el.innerHTML = chips ? `<div class="trade-chips">${chips}</div>` : '';
+    }
+
+    function tradeSearch(side, value) {
+      clearTimeout(tradeDebounce);
+      const q = value.trim().toLowerCase();
+      const el = document.getElementById('results-' + side);
+      if (q.length < 1) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+      tradeDebounce = setTimeout(() => {
+        const addedIds = new Set(
+          (side === 'giving' ? tradeGiving : tradeReceiving)
+            .filter(i => i.type === 'player').map(i => i.id)
+        );
+        let results;
+        if (side === 'giving') {
+          // From user's own roster
+          results = ALL_PLAYERS.filter(p =>
+            p.name.toLowerCase().includes(q) && !addedIds.has(p.id)
+          ).slice(0, 10);
+          tradeSearchResultsG = results;
+        } else {
+          // From full player DB (all NFL)
+          const SKILL = new Set(['QB','RB','WR','TE','K']);
+          results = Object.entries(playerDB)
+            .filter(([id, p]) =>
+              p && p.first_name && p.last_name && SKILL.has(p.position) &&
+              `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) &&
+              !addedIds.has(id)
+            )
+            .slice(0, 10)
+            .map(([id, p]) => ({ id, name:`${p.first_name} ${p.last_name}`,
+              team: p.team||'FA', position: p.position, age: p.age||0, exp: p.years_exp??0 }));
+          tradeSearchResultsR = results;
+        }
+        if (!results.length) { el.classList.add('hidden'); return; }
+        el.innerHTML = results.map((p, i) => `
+          <div class="trade-result-row" onclick="selectTradeResult('${side}',${i})">
+            <span class="pos-badge pos-${p.position.toLowerCase()}">${p.position}</span>
+            <div>
+              <div class="trade-result-name">${escHtml(p.name)}</div>
+              <div class="trade-result-meta">${p.team} · Age ${p.age||'?'}</div>
+            </div>
+          </div>`).join('');
+        el.classList.remove('hidden');
+      }, 180);
+    }
+
+    function selectTradeResult(side, idx) {
+      const results = side === 'giving' ? tradeSearchResultsG : tradeSearchResultsR;
+      const p = results[idx];
+      if (!p) return;
+      (side === 'giving' ? tradeGiving : tradeReceiving).push(
+        { type:'player', id:p.id, name:p.name, team:p.team, position:p.position, age:p.age, exp:p.exp }
+      );
+      const inp = document.getElementById('search-' + side);
+      const res = document.getElementById('results-' + side);
+      if (inp) inp.value = '';
+      if (res) { res.classList.add('hidden'); res.innerHTML = ''; }
+      if (side === 'giving') tradeSearchResultsG = []; else tradeSearchResultsR = [];
+      refreshTradeChips(side);
+    }
+
+    async function analyzeTrade() {
+      const fmt = items => items.map(it =>
+        it.type === 'player'
+          ? `${it.name} (${it.position}, ${it.team}, Age ${it.age||'?'}, ${it.exp===0?'Rookie':'Yr '+it.exp})`
+          : it.label
+      ).join(' + ') || 'Nothing';
+
+      _tradeGivingText    = fmt(tradeGiving);
+      _tradeReceivingText = fmt(tradeReceiving);
+
+      if (!tradeGiving.length && !tradeReceiving.length) {
+        alert('Add players or picks to both sides first.');
+        return;
+      }
+
+      document.getElementById('trade-setup-screen').classList.add('hidden');
+      const resultsEl = document.getElementById('trade-results-screen');
+      resultsEl.classList.remove('hidden');
+      resultsEl.innerHTML = `
+        <div class="analyzing-wrap">
+          <div class="spinner"></div>
+          <div class="analyzing-title">EVALUATING TRADE</div>
+          <div class="analyzing-sub">RUNNING NEGOTIATION ANALYSIS</div>
+        </div>`;
+
+      const isDynasty = leagueType === 'dynasty';
+      const SCHEMA = `{"verdict":"one bold sentence","value_balance":"you_win_big|you_win|fair|they_win|they_win_big","leverage":"2 sentences on leverage","timing":"2 sentences on timing","counter_offer":"what to ask for instead or null","risk_flags":["up to 3 short risks"],"long_term":"one sentence impact"}`;
+      const system = `You are GridironIQ's trade negotiation coach for ${isDynasty?'dynasty':'redraft'} PPR fantasy. User is ${tradeContext}. Be direct and opinionated — act as a skilled negotiator not a value calculator. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
+      const prompt = `Evaluate this ${isDynasty?'dynasty':'redraft'} PPR trade:\nGIVING: ${_tradeGivingText}\nRECEIVING: ${_tradeReceivingText}\nContext: ${tradeContext}`;
+
+      try {
+        const res = await fetch(WORKER_URL, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:800, system, messages:[{role:'user',content:prompt}] }),
+        });
+        const raw = await res.text();
+        let d; try { d = JSON.parse(raw); } catch { throw new Error('Bad response'); }
+        if (!res.ok || d.type==='error') throw new Error(d.error?.message||'HTTP '+res.status);
+        const txt   = d.content?.find(b => b.type==='text')?.text || '';
+        const match = txt.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+        if (!match) throw new Error('No JSON in response');
+        tradeAnalysis = JSON.parse(match[0]);
+        renderTradeResults(tradeAnalysis);
+        saveTrade(tradeAnalysis);
+      } catch(e) {
+        resultsEl.innerHTML = `
+          <div class="card error-card" style="font-size:11px">${escHtml(e.message)}</div>
+          <button class="btn btn-secondary" style="margin-top:8px" onclick="showTradeSetupScreen()">← BACK TO TRADE</button>`;
+      }
+    }
+
+    function renderTradeResults(data) {
+      const balances = {
+        you_win_big:  { label:'YOU WIN BIG',  pct:10, color:'var(--start)' },
+        you_win:      { label:'YOU WIN',       pct:32, color:'var(--start)' },
+        fair:         { label:'FAIR TRADE',    pct:50, color:'var(--flex)'  },
+        they_win:     { label:'THEY WIN',      pct:68, color:'var(--sit)'   },
+        they_win_big: { label:'THEY WIN BIG',  pct:90, color:'var(--sit)'   },
+      };
+      const bal = balances[data.value_balance] || balances.fair;
+
+      document.getElementById('trade-results-screen').innerHTML = `
+        <div class="card" style="font-size:10px;color:var(--text-3);letter-spacing:1px;line-height:2">
+          <div><span style="color:var(--sit)">GIVING →</span>  ${escHtml(_tradeGivingText)}</div>
+          <div><span style="color:var(--start)">RECEIVING ←</span>  ${escHtml(_tradeReceivingText)}</div>
+        </div>
+        <div class="card verdict-card">
+          <div class="narrative-label">VERDICT</div>
+          <div class="verdict-text">${escHtml(data.verdict||'')}</div>
+        </div>
+        <div class="card">
+          <div class="narrative-label">VALUE BALANCE</div>
+          <div class="value-scale-labels"><span>YOU WIN BIG</span><span>THEY WIN BIG</span></div>
+          <div class="value-scale-track">
+            <div class="value-scale-marker" style="left:${bal.pct}%;background:${bal.color}"></div>
+          </div>
+          <div class="value-verdict" style="color:${bal.color}">${bal.label}</div>
+        </div>
+        <div class="card">
+          <div class="trade-insight-label">LEVERAGE ANALYSIS</div>
+          <div class="trade-insight-text">${escHtml(data.leverage||'')}</div>
+        </div>
+        <div class="card">
+          <div class="trade-insight-label">TIMING INSIGHT</div>
+          <div class="trade-insight-text">${escHtml(data.timing||'')}</div>
+        </div>
+        ${data.counter_offer ? `
+        <div class="card" style="border-left:3px solid var(--flex)">
+          <div class="trade-insight-label" style="color:var(--flex)">COUNTER OFFER</div>
+          <div class="trade-insight-text">${escHtml(data.counter_offer)}</div>
+        </div>` : ''}
+        ${(data.risk_flags||[]).length ? `
+        <div class="card">
+          <div class="trade-insight-label">RISK FLAGS</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            ${(data.risk_flags||[]).map(r=>`<div class="risk-row"><div class="risk-pip"></div><span>${escHtml(r)}</span></div>`).join('')}
+          </div>
+        </div>` : ''}
+        ${data.long_term ? `
+        <div class="card">
+          <div class="trade-insight-label">${leagueType==='dynasty'?'DYNASTY IMPACT':'SEASON IMPACT'}</div>
+          <div class="trade-insight-text">${escHtml(data.long_term)}</div>
+        </div>` : ''}
+        <button class="share-btn" onclick="shareTradeResults()">↗ SHARE THIS ANALYSIS</button>
+        <button class="btn btn-secondary" style="margin-top:0" onclick="showTradeSetupScreen()">↩ ANALYZE ANOTHER TRADE</button>
+      `;
+    }
+
+    function shareTradeResults() {
+      if (!tradeAnalysis) return;
+      const d = tradeAnalysis;
+      const balLabels = { you_win_big:'YOU WIN BIG', you_win:'YOU WIN',
+        fair:'FAIR TRADE', they_win:'THEY WIN', they_win_big:'THEY WIN BIG' };
+      const lines = [
+        '🏈 GridironIQ Trade Analysis',
+        '',
+        `GIVING: ${_tradeGivingText}`,
+        `RECEIVING: ${_tradeReceivingText}`,
+        '',
+        `VERDICT: ${d.verdict}`,
+        `VALUE: ${balLabels[d.value_balance]||d.value_balance}`,
+        '',
+        `LEVERAGE: ${d.leverage}`,
+        `TIMING: ${d.timing}`,
+        d.counter_offer ? `\nCOUNTER: ${d.counter_offer}` : null,
+        (d.risk_flags||[]).length ? `\nRISKS:\n${d.risk_flags.map(r=>'• '+r).join('\n')}` : null,
+        '',
+        `Analyzed by GridironIQ — ${leagueType.toUpperCase()} · ${tradeContext}`,
+      ].filter(l => l !== null).join('\n');
+
+      const btn = document.querySelector('.share-btn');
+      navigator.clipboard.writeText(lines)
+        .then(() => { if(btn){btn.textContent='✓ COPIED';setTimeout(()=>btn.textContent='↗ SHARE THIS ANALYSIS',2200);} })
+        .catch(() => { prompt('Copy this:', lines); });
+    }
+
+    async function saveTrade(data) {
+      if (!sleeperUser || !currentLeague) return;
+      try {
+        await sb.from('trades').insert({
+          sleeper_username:  sleeperUser.username,
+          league_id:         currentLeague.league_id,
+          league_type:       leagueType,
+          trade_context:     tradeContext,
+          giving_summary:    _tradeGivingText,
+          receiving_summary: _tradeReceivingText,
+          verdict:           data.verdict,
+          value_balance:     data.value_balance,
+        });
+      } catch(_) { /* non-critical */ }
     }
 
     /* ── FULL ROSTER VIEW ───────────────────────────────────── */
