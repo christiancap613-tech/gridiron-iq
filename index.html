@@ -752,6 +752,91 @@
     #tab-wr, #tab-rb, #tab-qb, #tab-report { cursor: pointer; }
     .nav-icon { font-size: 15px; line-height: 1; }
 
+    /* ── POSITION BADGE ─────────────────────────────────────── */
+    .pos-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      padding: 3px 7px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .pos-qb  { color:#60a5fa; background:rgba(96,165,250,0.12); border:1px solid rgba(96,165,250,0.28); }
+    .pos-rb  { color:#f87171; background:rgba(248,113,113,0.12); border:1px solid rgba(248,113,113,0.28); }
+    .pos-wr  { color:var(--start); background:color-mix(in srgb,var(--start) 12%,transparent); border:1px solid color-mix(in srgb,var(--start) 28%,transparent); }
+    .pos-te  { color:#fb923c; background:rgba(251,146,60,0.12); border:1px solid rgba(251,146,60,0.28); }
+    .pos-k, .pos-def { color:var(--text-3); background:transparent; border:1px solid var(--border); }
+
+    /* ── FULL ROSTER VIEW ────────────────────────────────────── */
+    .roster-health-grade {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 48px;
+      line-height: 1;
+    }
+    .health-stat {
+      font-size: 10px;
+      color: var(--text-3);
+      letter-spacing: 1px;
+    }
+    .health-stat span { font-weight: 600; }
+
+    /* ── PLAYER ANALYSIS MODAL ───────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.82);
+      z-index: 300;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      backdrop-filter: blur(3px);
+    }
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px 18px 0 0;
+      width: 100%;
+      max-width: 680px;
+      max-height: 78vh;
+      overflow-y: auto;
+      animation: slideUp 0.22s ease forwards;
+      transition: background-color 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .modal-handle {
+      width: 36px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 10px auto 0;
+    }
+    .modal-top {
+      padding: 14px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: border-color 0.3s ease;
+    }
+    .modal-player-info { display: flex; align-items: center; gap: 10px; }
+    .modal-player-name { font-size: 14px; font-weight: 500; color: var(--text-1); transition: color 0.3s ease; }
+    .modal-player-meta { font-size: 10px; color: var(--text-3); margin-top: 2px; transition: color 0.3s ease; }
+    .modal-close {
+      background: none; border: none;
+      font-size: 16px; color: var(--text-3);
+      cursor: pointer; padding: 4px 6px; line-height: 1;
+      transition: color 0.2s ease;
+    }
+    .modal-close:hover { color: var(--text-1); }
+    .modal-body { padding: 16px 16px 32px; }
+    .modal-loading {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 12px; padding: 28px 0;
+    }
+
     /* ── REPORT VIEW ────────────────────────────────────────── */
     .report-acc-pct {
       font-family: 'Bebas Neue', sans-serif;
@@ -855,7 +940,8 @@
     </div>
     <div class="header-right">
       <div id="league-type-badge" class="league-type-badge hidden"></div>
-      <button id="btn-switch-league" class="btn-switch hidden" onclick="switchLeague()">↗ SWITCH LEAGUE</button>
+      <button id="btn-full-roster" class="btn-switch hidden" onclick="showFullRoster()" style="color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">⊞ ROSTER</button>
+      <button id="btn-switch-league" class="btn-switch hidden" onclick="switchLeague()">↗ SWITCH</button>
       <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light / dark">
         <div class="toggle-knob">☀</div>
       </button>
@@ -989,8 +1075,24 @@
         <div id="report-body"></div>
       </div>
 
+      <!-- VIEW: FULL ROSTER ─────────────────────────────────── -->
+      <div id="view-fullroster" class="view hidden">
+        <div id="fullroster-health" class="card narrative-card"></div>
+        <div id="fullroster-body"></div>
+        <button class="btn-text" onclick="closeFullRoster()">← BACK TO ROSTER</button>
+      </div>
+
     </div>
   </main>
+
+  <!-- ── PLAYER ANALYSIS MODAL ───────────────────────────────── -->
+  <div id="player-modal" class="modal-overlay hidden" onclick="maybeCloseModal(event)">
+    <div class="modal-card">
+      <div class="modal-handle"></div>
+      <div id="modal-top" class="modal-top"></div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
 
   <!-- ── BOTTOM NAV ───────────────────────────────────────────── -->
   <nav class="bottom-nav">
@@ -1004,7 +1106,7 @@
   <script>
     /* ── CONSTANTS ──────────────────────────────────────────── */
     const WORKER_URL       = 'https://gridiron-iq-proxy.christiancap613-tech.workers.dev';
-    const PLAYER_CACHE_KEY = 'giq_players_v2';
+    const PLAYER_CACHE_KEY = 'giq_players_v3'; // v3 adds DEF/ST
     const PLAYER_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 h
 
     /* ── SUPABASE ───────────────────────────────────────────── */
@@ -1021,6 +1123,8 @@
     let QBS            = [];    // live QB objects
     let currentPosition = 'WR'; // active tab: 'WR' | 'RB' | 'QB'
     let leagueType      = 'dynasty'; // 'dynasty' | 'redraft'
+    let ALL_PLAYERS     = []; // full roster, all positions
+    let lastPositionTab = 'WR'; // tab to return to from full roster
     let selectMode     = false;
     let selected       = [];
     let reportData     = { recs: [], outcomes: [] };
@@ -1035,7 +1139,7 @@
 
     /* ── VIEW ROUTER ────────────────────────────────────────── */
     function showView(v) {
-      ['username','loading','leagues','roster','analyzing','results','report'].forEach(n =>
+      ['username','loading','leagues','roster','analyzing','results','report','fullroster'].forEach(n =>
         document.getElementById('view-' + n).classList.add('hidden')
       );
       document.getElementById('view-' + v).classList.remove('hidden');
@@ -1232,9 +1336,10 @@
         const myRoster = rosters.find(r => r.owner_id === sleeperUser.user_id);
         if (!myRoster) throw new Error("Couldn't find your roster in this league.");
 
-        WRS = buildWRArray(myRoster, players);
-        RBS = buildRBArray(myRoster, players);
-        QBS = buildQBArray(myRoster, players);
+        WRS         = buildWRArray(myRoster, players);
+        RBS         = buildRBArray(myRoster, players);
+        QBS         = buildQBArray(myRoster, players);
+        ALL_PLAYERS = buildAllPlayers(myRoster, players);
         if (WRS.length === 0 && RBS.length === 0 && QBS.length === 0)
           throw new Error('No skill players found on your roster in this league.');
 
@@ -1254,6 +1359,7 @@
         // Update header + roster subtitle
         document.getElementById('header-sub').textContent = league.name.toUpperCase();
         document.getElementById('btn-switch-league').classList.remove('hidden');
+        document.getElementById('btn-full-roster').classList.remove('hidden');
         const modeLabel = leagueType === 'dynasty' ? 'DYNASTY ANALYSIS' : 'REDRAFT ANALYSIS';
         document.getElementById('roster-sub').textContent = `${modeLabel} · WEEK 1 · 2026`;
 
@@ -1291,7 +1397,7 @@
       const all = await fetch('https://api.sleeper.app/v1/players/nfl').then(r => r.json());
 
       // Store only skill positions to stay within localStorage limits (~5 MB)
-      const SKILL = new Set(['QB', 'RB', 'WR', 'TE', 'K']);
+      const SKILL = new Set(['QB', 'RB', 'WR', 'TE', 'K', 'DEF']);
       const data  = {};
       for (const [id, p] of Object.entries(all)) {
         if (p?.position && SKILL.has(p.position)) data[id] = p;
@@ -1385,6 +1491,38 @@
           const o = { Starter: 0, Bench: 1, Taxi: 2 };
           const byStatus = (o[a.status] ?? 1) - (o[b.status] ?? 1);
           return byStatus !== 0 ? byStatus : a.depth - b.depth;
+        });
+    }
+
+    /* ── BUILD FULL ROSTER (ALL POSITIONS) ──────────────────── */
+    function buildAllPlayers(roster, players) {
+      const starters = new Set(roster.starters || []);
+      const taxi     = new Set(roster.taxi     || []);
+      const posOrder = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DEF: 5 };
+
+      return (roster.players || [])
+        .map(pid => {
+          const p = players[pid];
+          if (!p || !p.position) return null;
+          return {
+            id:       pid,
+            name:     `${p.first_name} ${p.last_name}`,
+            team:     p.team || 'FA',
+            age:      p.age  || 0,
+            exp:      p.years_exp ?? 0,
+            position: p.position,
+            status:   starters.has(pid) ? 'Starter' : taxi.has(pid) ? 'Taxi' : 'Bench',
+            injury:   mapInjury(p.injury_status),
+            depth:    p.depth_chart_order ?? 999,
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+          const po = (posOrder[a.position] ?? 9) - (posOrder[b.position] ?? 9);
+          if (po !== 0) return po;
+          const so = { Starter: 0, Bench: 1, Taxi: 2 };
+          const sd = ((so[a.status] ?? 1) - (so[b.status] ?? 1));
+          return sd !== 0 ? sd : a.depth - b.depth;
         });
     }
 
@@ -1493,6 +1631,216 @@
         selectMode ? 'CANCEL' : `SELECT ${currentPosition}s`;
       document.querySelectorAll('.wr-card').forEach(c => c.classList.remove('selected'));
       document.getElementById('btn-analyze-selected').style.display = 'none';
+    }
+
+    /* ── FULL ROSTER VIEW ───────────────────────────────────── */
+    function showFullRoster() {
+      lastPositionTab = currentPosition || 'WR';
+      // Deactivate position tabs, keep nav clean
+      ['wr','rb','qb'].forEach(t => document.getElementById('tab-' + t).classList.remove('active'));
+      document.getElementById('tab-report').classList.remove('active');
+      renderRosterHealth();
+      renderFullRoster();
+      showView('fullroster');
+    }
+
+    function closeFullRoster() {
+      switchPosition(lastPositionTab);
+    }
+
+    function renderRosterHealth() {
+      const total   = ALL_PLAYERS.length;
+      const starters = ALL_PLAYERS.filter(p => p.status === 'Starter').length;
+      const bench    = ALL_PLAYERS.filter(p => p.status === 'Bench').length;
+      const taxi     = ALL_PLAYERS.filter(p => p.status === 'Taxi').length;
+      const injured  = ALL_PLAYERS.filter(p => p.injury).length;
+      const injStarters = ALL_PLAYERS.filter(p => p.injury && p.status === 'Starter').length;
+
+      const byCt = pos => ALL_PLAYERS.filter(p => p.position === pos).length;
+      const wrCt = byCt('WR'), rbCt = byCt('RB'), qbCt = byCt('QB'), teCt = byCt('TE');
+
+      // Grade: start B, adjust up/down
+      let score = 3; // B
+      if (injStarters === 0 && wrCt >= 5 && rbCt >= 4) score = 4; // A
+      if (injStarters >= 2) score -= 2;
+      else if (injStarters === 1) score -= 1;
+      if (wrCt < 3 || rbCt < 2) score -= 1;
+      score = Math.max(0, Math.min(4, score));
+      const grade = ['F','C','C','B','A'][score];
+      const gradeColor = grade === 'A' ? 'var(--start)' : grade === 'B' ? 'var(--flex)'
+                        : grade === 'C' ? '#fb923c' : 'var(--sit)';
+
+      // Insight line
+      const strong = [], thin = [];
+      if (wrCt >= 5) strong.push('WR'); else if (wrCt < 3) thin.push('WR');
+      if (rbCt >= 4) strong.push('RB'); else if (rbCt < 2) thin.push('RB');
+      if (qbCt >= 2) strong.push('QB');
+      if (teCt >= 2) strong.push('TE'); else if (teCt === 0) thin.push('TE');
+      let insight;
+      if (injStarters > 0) insight = `${injStarters} starter${injStarters > 1 ? 's' : ''} currently injured — monitor game-day status`;
+      else if (strong.length && thin.length) insight = `Strong at ${strong.join(' & ')}, thin at ${thin.join(' & ')} depth`;
+      else if (strong.length) insight = `Deep at ${strong.join(' & ')} — solid roster construction`;
+      else if (thin.length) insight = `Thin at ${thin.join(' & ')} — prioritize in the trade market`;
+      else insight = `Balanced roster with ${starters} starters and ${bench} bench pieces`;
+
+      document.getElementById('fullroster-health').innerHTML = `
+        <div class="narrative-label">ROSTER INTELLIGENCE</div>
+        <div style="display:flex;align-items:center;gap:18px;margin:10px 0 8px">
+          <div class="roster-health-grade" style="color:${gradeColor}">${grade}</div>
+          <div style="flex:1">
+            <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:7px">
+              <div class="health-stat"><span style="color:var(--start)">${starters}</span> STARTERS</div>
+              <div class="health-stat"><span style="color:var(--text-2)">${bench}</span> BENCH</div>
+              ${taxi  > 0 ? `<div class="health-stat"><span style="color:var(--stash)">${taxi}</span> TAXI</div>` : ''}
+              ${injured > 0 ? `<div class="health-stat"><span style="color:var(--sit)">${injured}</span> INJURED</div>` : ''}
+            </div>
+            <div style="font-size:11px;color:var(--text-2);line-height:1.5">${escHtml(insight)}</div>
+          </div>
+        </div>`;
+    }
+
+    function renderFullRoster() {
+      const sections = [
+        { pos: 'QB',  label: 'QUARTERBACKS'  },
+        { pos: 'RB',  label: 'RUNNING BACKS' },
+        { pos: 'WR',  label: 'WIDE RECEIVERS' },
+        { pos: 'TE',  label: 'TIGHT ENDS'    },
+        { pos: 'K',   label: 'KICKERS'       },
+        { pos: 'DEF', label: 'DEFENSE'       },
+      ];
+      document.getElementById('fullroster-body').innerHTML = sections.map(({ pos, label }) => {
+        const group = ALL_PLAYERS.filter(p => p.position === pos);
+        if (!group.length) return '';
+        return `<div class="group-label">${label}</div>${group.map(renderRosterCard).join('')}`;
+      }).join('');
+    }
+
+    function renderRosterCard(p) {
+      const posClass = 'pos-' + p.position.toLowerCase();
+      const dotColor = p.injury             ? 'var(--sit)'
+                     : p.status === 'Starter' ? 'var(--start)'
+                     : p.status === 'Taxi'    ? 'var(--stash)'
+                     :                          'var(--text-3)';
+      const initials = p.name.split(' ').map(n => n[0]).join('').slice(0, 2);
+      return `
+        <div class="wr-card" onclick="openPlayerModal('${p.id}')">
+          <div class="avatar">${initials}</div>
+          <div class="wr-info">
+            <div class="wr-name">${escHtml(p.name)}</div>
+            <div class="wr-meta">${p.team} · Age ${p.age || '—'} · ${p.exp === 0 ? 'Rookie' : 'Yr ' + p.exp}</div>
+          </div>
+          <div class="wr-right">
+            <span class="pos-badge ${posClass}">${p.position}</span>
+            ${p.injury ? `<div class="inj-badge">${p.injury}</div>` : ''}
+            <div class="status-dot" style="background:${dotColor}"></div>
+          </div>
+        </div>`;
+    }
+
+    /* ── PLAYER ANALYSIS MODAL ──────────────────────────────── */
+    function maybeCloseModal(e) {
+      if (e.target === document.getElementById('player-modal')) forceCloseModal();
+    }
+    function forceCloseModal() {
+      document.getElementById('player-modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    async function openPlayerModal(playerId) {
+      const p = ALL_PLAYERS.find(pl => pl.id === playerId);
+      if (!p) return;
+
+      const posClass = 'pos-' + p.position.toLowerCase();
+      document.getElementById('modal-top').innerHTML = `
+        <div class="modal-player-info">
+          <span class="pos-badge ${posClass}">${p.position}</span>
+          <div>
+            <div class="modal-player-name">${escHtml(p.name)}</div>
+            <div class="modal-player-meta">${p.team} · ${p.status}${p.injury ? ' · ' + p.injury : ''}</div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="forceCloseModal()">✕</button>`;
+
+      document.getElementById('modal-body').innerHTML = `
+        <div class="modal-loading">
+          <div class="spinner" style="width:28px;height:28px;border-width:2px"></div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;color:var(--text-3)">ANALYZING</div>
+        </div>`;
+
+      document.getElementById('player-modal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      await analyzePlayerModal(p);
+    }
+
+    async function analyzePlayerModal(p) {
+      const bodyEl  = document.getElementById('modal-body');
+      const isDynasty = leagueType === 'dynasty';
+
+      const posCtx = {
+        dynasty: {
+          QB:  'dynasty QB: age curve (peak 27-33), franchise stability, weapons, mobility, 2QB/SF value, 3-5yr outlook.',
+          RB:  'dynasty RB: age cliff after 30, contract status, rookie trajectory, sell-high windows, scheme fit.',
+          WR:  'dynasty WR: age curve (peak 24-28), target share trajectory, team stability, rookie upside, 3-5yr outlook.',
+          TE:  'dynasty TE: target share dominance, age (TEs develop slowly, peak 26-30), scheme fit, red-zone role.',
+          K:   'kicker: team red-zone efficiency, dome vs outdoor, usage consistency.',
+          DEF: 'defense: matchup difficulty, sack rate, turnover trends, coaching.',
+        },
+        redraft: {
+          QB:  'redraft QB (zero weight on age): this week matchup vs pass-rush DVOA, hot/cold streak, home/away, weather.',
+          RB:  'redraft RB (zero weight on age): run defense matchup, snap share trends, injury status, game script.',
+          WR:  'redraft WR (zero weight on age): coverage matchup, target share trends, injury status, hot/cold streak.',
+          TE:  'redraft TE (zero weight on age): coverage matchup, target share trends, injury status, red-zone usage.',
+          K:   'redraft kicker: team red-zone efficiency, game totals, dome vs outdoor.',
+          DEF: 'redraft defense: this week matchup, recent sack and turnover rates, opponent offensive injuries.',
+        }
+      };
+      const mode   = isDynasty ? 'dynasty' : 'redraft';
+      const ctx    = posCtx[mode][p.position] || `${mode} analyst.`;
+      const label  = isDynasty ? 'dynasty' : 'redraft single-season';
+      const SCHEMA = `{"decision":"START or SIT or FLEX or STASH","confidence":55-95,"headline":"one sentence","reasoning":"2-3 sentences","key_factor":"one short phrase","risk":"one phrase or null","insight":"one sentence"}`;
+      const system = `You are GridironIQ, a ${ctx} Respond ONLY with valid JSON, no markdown, no text outside the object: ${SCHEMA}`;
+      const prompt = `${label.toUpperCase()} PPR analysis for: ${p.name}, ${p.team}, Age ${p.age || '?'}, ${p.exp === 0 ? 'Rookie' : 'Yr ' + p.exp}, ${p.status}${p.injury ? ', ' + p.injury : ''}. Return ONLY valid JSON.`;
+
+      try {
+        const res = await fetch(WORKER_URL, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 500, system, messages: [{ role: 'user', content: prompt }] }),
+        });
+        const raw = await res.text();
+        let d; try { d = JSON.parse(raw); } catch { throw new Error('Bad response'); }
+        if (!res.ok || d.type === 'error') throw new Error(d.error?.message || 'HTTP ' + res.status);
+        const txt   = d.content?.find(b => b.type === 'text')?.text || '';
+        const match = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
+        if (!match) throw new Error('No JSON in response');
+        const rec = JSON.parse(match[0]);
+        const dec = (rec.decision || 'SIT').toUpperCase();
+        const conf = rec.confidence || 0;
+        const tier = confTier(conf);
+        const icons = { START: '▲', FLEX: '◆', SIT: '▼', STASH: '●' };
+        bodyEl.innerHTML = `
+          <div class="rec-card dec-${dec.toLowerCase()}" style="border-radius:10px">
+            <div class="rec-header">
+              <div class="rec-header-left">
+                <span class="decision-badge">${icons[dec] || ''} ${dec}</span>
+              </div>
+              <div class="rec-conf">
+                <div class="conf-num conf-${tier}">${conf}<span class="conf-pct">%</span></div>
+                <div class="conf-bar-track"><div class="conf-bar-fill bar-${tier}" style="width:${conf}%"></div></div>
+              </div>
+            </div>
+            <div class="rec-body">
+              <div class="rec-headline">${escHtml(rec.headline || '')}</div>
+              <div class="rec-reasoning">${escHtml(rec.reasoning || '')}</div>
+              <div class="tags">
+                ${rec.key_factor ? `<div class="tag tag-key">◎ ${escHtml(rec.key_factor)}</div>` : ''}
+                ${rec.risk && rec.risk !== 'null' ? `<div class="tag tag-risk">⚠ ${escHtml(rec.risk)}</div>` : ''}
+              </div>
+              ${rec.insight ? `<div style="font-size:11px;color:var(--accent);margin-top:8px;letter-spacing:0.3px">${escHtml(rec.insight)}</div>` : ''}
+            </div>
+          </div>`;
+      } catch (e) {
+        bodyEl.innerHTML = `<div class="card error-card" style="font-size:11px">${escHtml(e.message)}</div>`;
+      }
     }
 
     /* ── REPORT TAB ─────────────────────────────────────────── */
