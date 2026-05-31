@@ -928,6 +928,17 @@
     }
     .grade-inactive { opacity: 0.28; }
     .report-loading { display: flex; justify-content: center; padding: 12px 0; }
+    .grade-variance-q {
+      font-size: 9px; color: var(--text-2); letter-spacing: 1.5px;
+      text-align: center; margin-bottom: 8px;
+      transition: color 0.3s ease;
+    }
+    .grade-variance-cancel {
+      background: none; border: none; font-size: 9px; color: var(--text-3);
+      cursor: pointer; width: 100%; padding: 5px 0; letter-spacing: 1px;
+      font-family: 'Bebas Neue', sans-serif;
+    }
+    .grade-variance-cancel:hover { color: var(--text-2); }
 
     /* ── TRADE ANALYZER ─────────────────────────────────────── */
     .trade-section {
@@ -2667,11 +2678,16 @@
     }
 
     function renderAccuracy() {
-      const el      = document.getElementById('report-accuracy-card');
-      const total   = reportData.recs.length;
-      const graded  = reportData.outcomes.length;
-      const correct = reportData.outcomes.filter(o => o.decision_correct).length;
-      const pct     = graded > 0 ? Math.round(correct / graded * 100) : null;
+      const el       = document.getElementById('report-accuracy-card');
+      const total    = reportData.recs.length;
+      const outcomes = reportData.outcomes;
+      const graded   = outcomes.length;
+      const correct  = outcomes.filter(o => o.decision_correct).length;
+      const wrong    = outcomes.filter(o => o.decision_correct === false).length;
+      const badLuck  = outcomes.filter(o => o.decision_correct === false && o.variance_flag === true).length;
+      const badCall  = outcomes.filter(o => o.decision_correct === false && o.variance_flag === false).length;
+      const ungraded = total - graded;
+      const pct      = graded > 0 ? Math.round(correct / graded * 100) : null;
       const pctColor = pct === null ? 'var(--text-3)'
         : pct >= 70 ? 'var(--start)' : pct >= 50 ? 'var(--flex)' : 'var(--sit)';
 
@@ -2682,14 +2698,31 @@
         return;
       }
 
-      const ungraded = total - graded;
-      const statement = graded === 0
-        ? `${total} call${total !== 1 ? 's' : ''} made — tap ✓ or ✗ below to grade them`
-        : `${correct} of ${graded} call${graded !== 1 ? 's' : ''} correct this season${ungraded > 0 ? ` · ${ungraded} ungraded` : ''}`;
+      // Season record stats row
+      const stats = [];
+      if (correct  > 0) stats.push(`<span style="color:var(--start);font-weight:600">${correct}</span>&nbsp;<span style="color:var(--text-3)">CORRECT</span>`);
+      if (badCall  > 0) stats.push(`<span style="color:var(--sit);font-weight:600">${badCall}</span>&nbsp;<span style="color:var(--text-3)">BAD CALL${badCall > 1 ? 'S' : ''}</span>`);
+      if (badLuck  > 0) stats.push(`<span style="color:#fbbf24;font-weight:600">${badLuck}</span>&nbsp;<span style="color:var(--text-3)">BAD LUCK</span>`);
+      if (ungraded > 0) stats.push(`<span style="color:var(--text-2);font-weight:600">${ungraded}</span>&nbsp;<span style="color:var(--text-3)">UNGRADED</span>`);
+
+      // One-liner
+      let statement;
+      if (graded === 0) {
+        statement = `${total} call${total !== 1 ? 's' : ''} made — tap ✓ or ✗ below to grade them`;
+      } else {
+        const parts = [`GridironIQ is ${correct} of ${graded} this season`];
+        if (badCall > 0) parts.push(`${badCall} bad call${badCall > 1 ? 's' : ''}`);
+        if (badLuck > 0) parts.push(`${badLuck} bad luck`);
+        if (ungraded > 0) parts.push(`${ungraded} ungraded`);
+        statement = parts.join(' — ');
+      }
 
       el.innerHTML = `
         <div class="narrative-label">ACCURACY THIS SEASON</div>
         <div class="report-acc-pct" style="color:${pctColor}">${pct !== null ? pct + '%' : '—'}</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 4px;font-size:10px;letter-spacing:0.5px">
+          ${stats.join('')}
+        </div>
         <div class="report-acc-stmt">${escHtml(statement)}</div>`;
     }
 
@@ -2721,15 +2754,15 @@
             <span class="week-tally">${tally}</span>
           </div>
           ${weekRecs.map(rec => {
-            const outcome   = reportData.outcomes.find(o => o.recommendation_id === rec.id);
-            const isCorrect = outcome ? outcome.decision_correct : null;
+            const outcome      = reportData.outcomes.find(o => o.recommendation_id === rec.id);
+            const isCorrect    = outcome ? outcome.decision_correct : null;
+            // varianceFlag: true=bad luck, false=bad call, null=correct/ungraded (display-irrelevant)
+            const varianceFlag = (outcome && outcome.decision_correct === false)
+              ? (outcome.variance_flag === true ? true : false)
+              : null;
             const dec  = (rec.decision || 'SIT').toUpperCase();
             const conf = rec.confidence || 0;
             const tier = confTier(conf);
-            const okCls  = isCorrect === true  ? 'grade-active-correct'
-                         : isCorrect === false ? 'grade-inactive' : '';
-            const nokCls = isCorrect === false ? 'grade-active-wrong'
-                         : isCorrect === true  ? 'grade-inactive' : '';
             return `
               <div class="report-card dec-${dec.toLowerCase()}">
                 <div class="rcard-top">
@@ -2743,60 +2776,133 @@
                   <div class="conf-num conf-${tier}">${conf}<span class="conf-pct">%</span></div>
                 </div>
                 <div class="rcard-grade" id="grade-${rec.id}">
-                  <button class="grade-btn grade-correct ${okCls}"
-                    onclick="gradeCall('${rec.id}', true)">✓ CORRECT</button>
-                  <button class="grade-btn grade-wrong ${nokCls}"
-                    onclick="gradeCall('${rec.id}', false)">✗ WRONG</button>
+                  ${gradeHTML(rec.id, isCorrect, varianceFlag)}
                 </div>
               </div>`;
           }).join('')}`;
       }).join('');
     }
 
-    async function gradeCall(recId, isCorrect) {
-      const existing = reportData.outcomes.find(o => o.recommendation_id === recId);
+    // Returns the HTML for the grade section based on grading state
+    function gradeHTML(recId, isCorrect, varianceFlag) {
+      if (isCorrect === null || isCorrect === undefined) {
+        // Ungraded — show two action buttons
+        return `
+          <button class="grade-btn grade-correct" onclick="gradeCall('${recId}', true)">✓ CORRECT</button>
+          <button class="grade-btn grade-wrong"   onclick="gradeCall('${recId}', false)">✗ WRONG</button>`;
+      }
+      if (isCorrect === true) {
+        // Correct — highlight green, dim wrong
+        return `
+          <button class="grade-btn grade-correct grade-active-correct" onclick="gradeCall('${recId}', true)">✓ CORRECT</button>
+          <button class="grade-btn grade-wrong grade-inactive"         onclick="gradeCall('${recId}', false)">✗ WRONG</button>`;
+      }
+      // isCorrect === false below
+      if (varianceFlag === null || varianceFlag === undefined) {
+        // Variance not yet chosen — show follow-up prompt (transient UI state only)
+        return `
+          <div style="width:100%">
+            <div class="grade-variance-q">WAS THIS BAD LUCK OR A BAD CALL?</div>
+            <div style="display:flex;gap:8px">
+              <button class="grade-btn" style="flex:1;color:#fbbf24;border-color:rgba(251,191,36,0.4)"
+                onclick="gradeCallVariance('${recId}', true)">🤞 BAD LUCK</button>
+              <button class="grade-btn grade-wrong" style="flex:1"
+                onclick="gradeCallVariance('${recId}', false)">⚑ BAD CALL</button>
+            </div>
+            <button class="grade-variance-cancel" onclick="resetGradeUI('${recId}')">← CANCEL</button>
+          </div>`;
+      }
+      if (varianceFlag === true) {
+        // Wrong — bad luck (amber)
+        return `
+          <button class="grade-btn grade-correct grade-inactive"
+            onclick="gradeCall('${recId}', true)">✓ CORRECT</button>
+          <button class="grade-btn" style="border-color:#fbbf24;color:#fbbf24;background:rgba(251,191,36,0.13)"
+            onclick="gradeCall('${recId}', false)">✗ WRONG · BAD LUCK</button>`;
+      }
+      // Wrong — bad call (red)
+      return `
+        <button class="grade-btn grade-correct grade-inactive"
+          onclick="gradeCall('${recId}', true)">✓ CORRECT</button>
+        <button class="grade-btn grade-wrong grade-active-wrong"
+          onclick="gradeCall('${recId}', false)">✗ WRONG · BAD CALL</button>`;
+    }
 
-      // Optimistic UI
-      setGradeUI(recId, isCorrect);
+    function setGradeUI(recId, isCorrect, varianceFlag) {
+      const el = document.getElementById('grade-' + recId);
+      if (el) el.innerHTML = gradeHTML(recId, isCorrect, varianceFlag);
+    }
 
-      try {
-        if (existing) {
-          await sb.from('outcomes')
-            .update({ decision_correct: isCorrect, updated_at: new Date().toISOString() })
-            .eq('id', existing.id);
-          existing.decision_correct = isCorrect;
-        } else {
-          const rec = reportData.recs.find(r => r.id === recId);
-          const { data: rows } = await sb.from('outcomes').insert({
-            recommendation_id: recId,
-            player_name:       rec?.player_name,
-            decision_correct:  isCorrect,
-            variance_flag:     false,
-            updated_at:        new Date().toISOString(),
-          }).select();
-          reportData.outcomes.push(
-            rows?.[0] ?? { recommendation_id: recId, decision_correct: isCorrect }
-          );
-        }
-        renderAccuracy();
-        // Refresh week tally labels
-        renderReport();
-
-      } catch (e) {
-        // Revert UI on failure
-        const prev = reportData.outcomes.find(o => o.recommendation_id === recId);
-        setGradeUI(recId, prev ? prev.decision_correct : null);
+    function resetGradeUI(recId) {
+      // Restore to whatever the saved state is (or ungraded if nothing saved)
+      const saved = reportData.outcomes.find(o => o.recommendation_id === recId);
+      if (saved) {
+        const vf = saved.decision_correct === false
+          ? (saved.variance_flag === true ? true : false)
+          : null;
+        setGradeUI(recId, saved.decision_correct, vf);
+      } else {
+        setGradeUI(recId, null, null);
       }
     }
 
-    function setGradeUI(recId, isCorrect) {
-      const el = document.getElementById('grade-' + recId);
-      if (!el) return;
-      const [ok, nok] = el.querySelectorAll('.grade-btn');
-      ok.className  = 'grade-btn grade-correct'
-        + (isCorrect === true  ? ' grade-active-correct' : isCorrect === false ? ' grade-inactive' : '');
-      nok.className = 'grade-btn grade-wrong'
-        + (isCorrect === false ? ' grade-active-wrong'   : isCorrect === true  ? ' grade-inactive' : '');
+    async function gradeCall(recId, isCorrect) {
+      if (isCorrect === false) {
+        // Don't save yet — show the variance follow-up
+        setGradeUI(recId, false, null); // null = prompt pending
+        return;
+      }
+      // isCorrect === true — save immediately
+      const existing = reportData.outcomes.find(o => o.recommendation_id === recId);
+      setGradeUI(recId, true);
+      try {
+        if (existing) {
+          await sb.from('outcomes')
+            .update({ decision_correct: true, variance_flag: false, updated_at: new Date().toISOString() })
+            .eq('id', existing.id);
+          existing.decision_correct = true;
+          existing.variance_flag    = false;
+        } else {
+          const rec = reportData.recs.find(r => r.id === recId);
+          const { data: rows } = await sb.from('outcomes').insert({
+            recommendation_id: recId, player_name: rec?.player_name,
+            decision_correct:  true,  variance_flag: false,
+            updated_at: new Date().toISOString(),
+          }).select();
+          reportData.outcomes.push(rows?.[0] ?? { recommendation_id: recId, decision_correct: true, variance_flag: false });
+        }
+        renderAccuracy();
+        renderReport();
+      } catch (_) {
+        resetGradeUI(recId);
+      }
+    }
+
+    async function gradeCallVariance(recId, varianceFlag) {
+      // Save WRONG with the chosen variance flag
+      setGradeUI(recId, false, varianceFlag); // optimistic
+      const existing = reportData.outcomes.find(o => o.recommendation_id === recId);
+      try {
+        if (existing) {
+          await sb.from('outcomes')
+            .update({ decision_correct: false, variance_flag: varianceFlag, updated_at: new Date().toISOString() })
+            .eq('id', existing.id);
+          existing.decision_correct = false;
+          existing.variance_flag    = varianceFlag;
+        } else {
+          const rec = reportData.recs.find(r => r.id === recId);
+          const { data: rows } = await sb.from('outcomes').insert({
+            recommendation_id: recId, player_name: rec?.player_name,
+            decision_correct:  false, variance_flag: varianceFlag,
+            updated_at: new Date().toISOString(),
+          }).select();
+          reportData.outcomes.push(rows?.[0] ?? { recommendation_id: recId, decision_correct: false, variance_flag: varianceFlag });
+        }
+        renderAccuracy();
+        renderReport();
+      } catch (_) {
+        resetGradeUI(recId);
+      }
     }
 
     /* ── HELPERS ────────────────────────────────────────────── */
