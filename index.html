@@ -1946,12 +1946,23 @@
         <button class="btn btn-primary" onclick="findWaiverTargets()">FIND TARGETS →</button>`;
     }
 
+    function buildLeagueOwnedIds() {
+      // Collect every player_id owned by ANY team in the league (roster + taxi + reserve)
+      const owned = new Set();
+      (leagueRosters || []).forEach(r => {
+        (r.players || []).forEach(id => owned.add(id));
+        (r.taxi    || []).forEach(id => owned.add(id));
+        (r.reserve || []).forEach(id => owned.add(id));
+      });
+      return owned;
+    }
+
     function buildWaiverCandidates(pos) {
-      const myIds = new Set(ALL_PLAYERS.map(p => p.id));
-      const isDyn = leagueType === 'dynasty';
-      const all   = Object.entries(playerDB)
+      const ownedIds = buildLeagueOwnedIds(); // excludes ALL owned players league-wide
+      const isDyn    = leagueType === 'dynasty';
+      const all      = Object.entries(playerDB)
         .filter(([id, p]) =>
-          p && p.position === pos && !myIds.has(id) &&
+          p && p.position === pos && !ownedIds.has(id) &&
           p.team && p.team.length <= 3 &&
           p.first_name && p.last_name &&
           (p.age||0) >= 20 && (p.age||0) <= (isDyn ? 30 : 36) &&
