@@ -1092,6 +1092,42 @@
       font-size: 9px; color: var(--text-3); letter-spacing: 1px;
       margin-bottom: 3px; transition: color 0.3s ease;
     }
+
+    /* ── WAIVER WIRE ─────────────────────────────────────────── */
+    .priority-badge {
+      font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px;
+      padding: 3px 8px; border-radius: 5px; flex-shrink: 0;
+    }
+    .priority-high   { color:var(--start); background:color-mix(in srgb,var(--start) 12%,transparent); border:1px solid color-mix(in srgb,var(--start) 28%,transparent); }
+    .priority-medium { color:#fbbf24; background:rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.28); }
+    .priority-stash  { color:var(--stash); background:color-mix(in srgb,var(--stash) 12%,transparent); border:1px solid color-mix(in srgb,var(--stash) 28%,transparent); }
+    .wire-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+      animation: fadeUp 0.3s ease forwards; opacity: 0;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .wire-card:nth-child(1){animation-delay:0.04s} .wire-card:nth-child(2){animation-delay:0.09s}
+    .wire-card:nth-child(3){animation-delay:0.14s} .wire-card:nth-child(4){animation-delay:0.19s}
+    .wire-card:nth-child(5){animation-delay:0.24s} .wire-card:nth-child(6){animation-delay:0.29s}
+    .wire-card:nth-child(7){animation-delay:0.34s}
+    .wire-top {
+      padding: 12px 15px; display: flex; align-items: center; gap: 9px;
+      border-bottom: 1px solid var(--border); transition: border-color 0.3s ease;
+    }
+    .wire-name { font-size: 13px; font-weight: 500; color: var(--text-1); transition: color 0.3s ease; }
+    .wire-meta { font-size: 10px; color: var(--text-3); margin-top: 2px; transition: color 0.3s ease; }
+    .wire-body { padding: 13px 15px; display: flex; flex-direction: column; gap: 8px; }
+    .wire-reason { font-size: 13px; color: var(--text-2); line-height: 1.6; transition: color 0.3s ease; }
+    .wire-dynasty { font-size: 11px; color: var(--accent); letter-spacing: 0.3px; transition: color 0.3s ease; }
+    .pos-filter { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pos-filter-btn {
+      padding: 9px 18px; background: var(--bg-card-2); border: 1px solid var(--border);
+      border-radius: 8px; font-family: 'Bebas Neue', sans-serif; font-size: 12px;
+      letter-spacing: 1.5px; color: var(--text-3); cursor: pointer; transition: all 0.2s;
+    }
+    .pos-filter-btn.active { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb,var(--accent) 8%,transparent); }
+    .pos-filter-btn:hover:not(.active) { border-color: var(--text-2); color: var(--text-2); }
   </style>
 </head>
 <body>
@@ -1104,6 +1140,7 @@
     </div>
     <div class="header-right">
       <div id="league-type-badge" class="league-type-badge hidden"></div>
+      <button id="btn-wire" class="btn-switch hidden" onclick="showWireView()" style="color:var(--stash);border-color:color-mix(in srgb,var(--stash) 30%,transparent)">◈ WIRE</button>
       <button id="btn-trade" class="btn-switch hidden" onclick="showTradeView()" style="color:var(--flex);border-color:color-mix(in srgb,var(--flex) 30%,transparent)">⇄ TRADE</button>
       <button id="btn-full-roster" class="btn-switch hidden" onclick="showFullRoster()" style="color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,transparent)">⊞ ROSTER</button>
       <button id="btn-switch-league" class="btn-switch hidden" onclick="switchLeague()">↗ SWITCH</button>
@@ -1240,6 +1277,12 @@
         <div id="report-body"></div>
       </div>
 
+      <!-- VIEW: WAIVER WIRE ──────────────────────────────────── -->
+      <div id="view-wire" class="view hidden">
+        <div id="wire-setup-screen"></div>
+        <div id="wire-results-screen" class="hidden"></div>
+      </div>
+
       <!-- VIEW: TRADE ANALYZER ───────────────────────────────── -->
       <div id="view-trade" class="view hidden">
         <div id="trade-setup-screen"></div>
@@ -1307,6 +1350,8 @@
     let tradeSearchResultsG = []; // live search results giving
     let tradeSearchResultsR = []; // live search results receiving
     let tradeDebounce = null;
+    let wirePosition  = 'WR'; // selected position for wire search
+    let wireAnalysis  = null; // last results
     let leagueRosters      = []; // all rosters in current league
     let leagueUsers        = []; // all users in current league
     let selectedPartnerId  = null;
@@ -1326,7 +1371,7 @@
 
     /* ── VIEW ROUTER ────────────────────────────────────────── */
     function showView(v) {
-      ['username','loading','leagues','roster','analyzing','results','report','fullroster','trade'].forEach(n =>
+      ['username','loading','leagues','roster','analyzing','results','report','fullroster','trade','wire'].forEach(n =>
         document.getElementById('view-' + n).classList.add('hidden')
       );
       document.getElementById('view-' + v).classList.remove('hidden');
@@ -1552,6 +1597,7 @@
         document.getElementById('btn-switch-league').classList.remove('hidden');
         document.getElementById('btn-full-roster').classList.remove('hidden');
         document.getElementById('btn-trade').classList.remove('hidden');
+        document.getElementById('btn-wire').classList.remove('hidden');
         const modeLabel = leagueType === 'dynasty' ? 'DYNASTY ANALYSIS' : 'REDRAFT ANALYSIS';
         document.getElementById('roster-sub').textContent = `${modeLabel} · WEEK 1 · 2026`;
 
@@ -1823,6 +1869,185 @@
         selectMode ? 'CANCEL' : `SELECT ${currentPosition}s`;
       document.querySelectorAll('.wr-card').forEach(c => c.classList.remove('selected'));
       document.getElementById('btn-analyze-selected').style.display = 'none';
+    }
+
+    /* ── WAIVER WIRE ─────────────────────────────────────────── */
+    function showWireView() {
+      lastPositionTab = currentPosition || 'WR';
+      wirePosition = 'WR';
+      wireAnalysis = null;
+      ['wr','rb','qb'].forEach(t => document.getElementById('tab-' + t).classList.remove('active'));
+      document.getElementById('tab-report').classList.remove('active');
+      renderWireSetup();
+      document.getElementById('wire-results-screen').classList.add('hidden');
+      document.getElementById('wire-setup-screen').classList.remove('hidden');
+      showView('wire');
+    }
+
+    function closeWireView() { switchPosition(lastPositionTab || 'WR'); }
+
+    function showWireSetupScreen() {
+      document.getElementById('wire-results-screen').classList.add('hidden');
+      renderWireSetup();
+      document.getElementById('wire-setup-screen').classList.remove('hidden');
+    }
+
+    function setWirePos(pos) {
+      wirePosition = pos;
+      document.querySelectorAll('.pos-filter-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.pos === pos)
+      );
+      document.querySelector('#wire-setup-screen .section-sub').textContent =
+        `${leagueType.toUpperCase()} · ${pos}`;
+    }
+
+    function getRosterSnapshot() {
+      return ['QB','RB','WR','TE'].map(pos => {
+        const pp   = ALL_PLAYERS.filter(p => p.position === pos);
+        const ages = pp.map(p => p.age).filter(a => a > 0);
+        const avg  = ages.length ? (ages.reduce((s,a)=>s+a,0)/ages.length).toFixed(1) : null;
+        const need = {WR:4,RB:3,QB:2,TE:2}[pos]||2;
+        const color = pp.length < need ? 'var(--sit)' : pp.length >= need+2 ? 'var(--start)' : 'var(--text-2)';
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0;border-bottom:1px solid var(--border)">
+            <span style="font-family:'DM Mono',monospace;letter-spacing:1px;color:${color}">${pos}</span>
+            <span style="color:var(--text-1)">${pp.length} player${pp.length!==1?'s':''}</span>
+            <span style="color:var(--text-3)">${avg?`avg ${avg}`:''}</span>
+          </div>`;
+      }).join('');
+    }
+
+    function renderWireSetup() {
+      const POSITIONS = ['WR','RB','QB','TE'];
+      const posButtons = POSITIONS.map(p =>
+        `<button class="pos-filter-btn${wirePosition===p?' active':''}" data-pos="${p}" onclick="setWirePos('${p}')">${p}</button>`
+      ).join('');
+      document.getElementById('wire-setup-screen').innerHTML = `
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="section-title">WAIVER WIRE</div>
+            <div class="section-sub">${leagueType.toUpperCase()} · ${wirePosition}</div>
+          </div>
+          <button class="btn-text" style="width:auto;padding:6px 10px" onclick="closeWireView()">← BACK</button>
+        </div>
+        <div class="card">
+          <div class="trade-section-label">YOUR ROSTER SNAPSHOT</div>
+          <div style="margin-top:4px">${getRosterSnapshot()}</div>
+        </div>
+        <div class="card">
+          <div class="trade-section-label">LOOKING FOR HELP AT</div>
+          <div class="pos-filter" style="margin-top:8px">${posButtons}</div>
+        </div>
+        <div class="card context-card">
+          <div class="context-label">CONTEXT FOR AI</div>
+          <textarea id="wire-context" class="context-input" rows="3"
+            placeholder="Add any relevant news — injuries, depth chart changes, recent breakouts (e.g. Kenneth Walker is hurt, need a handcuff or volume back)…"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="findWaiverTargets()">FIND TARGETS →</button>`;
+    }
+
+    function buildWaiverCandidates(pos) {
+      const myIds = new Set(ALL_PLAYERS.map(p => p.id));
+      const isDyn = leagueType === 'dynasty';
+      const all   = Object.entries(playerDB)
+        .filter(([id, p]) =>
+          p && p.position === pos && !myIds.has(id) &&
+          p.team && p.team.length <= 3 &&
+          p.first_name && p.last_name &&
+          (p.age||0) >= 20 && (p.age||0) <= (isDyn ? 30 : 36) &&
+          p.active !== false
+        )
+        .map(([id, p]) => ({
+          id, name:`${p.first_name} ${p.last_name}`, team:p.team,
+          age:p.age||0, exp:p.years_exp??0, depth:p.depth_chart_order??99,
+        }));
+      return all.map(p => {
+        let s = 0;
+        if (isDyn) {
+          if      (p.age<=21) s+=50; else if (p.age<=23) s+=38;
+          else if (p.age<=25) s+=26; else if (p.age<=27) s+=14;
+          else if (p.age>=30) s-=10;
+          if      (p.exp===0) s+=25; else if (p.exp<=2) s+=14;
+          else if (p.exp<=4)  s+=6;
+        } else {
+          if (p.age>=23&&p.age<=29) s+=20;
+          if (p.exp>=1&&p.exp<=6)   s+=12;
+        }
+        if      (p.depth===2) s+=14; else if (p.depth===1) s+=4;
+        else if (p.depth===3) s+=6;
+        return {...p, score:s};
+      }).sort((a,b)=>b.score-a.score).slice(0,18);
+    }
+
+    async function findWaiverTargets() {
+      const pos    = wirePosition;
+      const ctx    = document.getElementById('wire-context')?.value?.trim()||'';
+      const isDyn  = leagueType==='dynasty';
+      document.getElementById('wire-setup-screen').classList.add('hidden');
+      const el = document.getElementById('wire-results-screen');
+      el.classList.remove('hidden');
+      el.innerHTML = `<div class="analyzing-wrap"><div class="spinner"></div><div class="analyzing-title">SCANNING WIRE</div><div class="analyzing-sub">IDENTIFYING TARGETS · EVALUATING UPSIDE</div></div>`;
+      const cands = buildWaiverCandidates(pos);
+      if (!cands.length) {
+        el.innerHTML = `<div class="card error-card" style="font-size:11px">No waiver candidates found for ${pos}.</div><button class="btn btn-secondary" style="margin-top:8px" onclick="showWireSetupScreen()">← BACK</button>`;
+        return;
+      }
+      const myStr   = ALL_PLAYERS.filter(p=>p.position===pos).map(p=>`${p.name} (${p.team}, Age ${p.age}, Yr ${p.exp}, ${p.status})`).join(', ')||'None';
+      const candStr = cands.map(p=>`${p.name}, ${p.team}, Age ${p.age}, Yr ${p.exp}${p.depth<=5?', Depth '+p.depth:''}`).join('\n');
+      const SCHEMA  = `{"roster_need":"one sentence on this team's ${pos} situation","targets":[{"name":"string","priority":"HIGH|MEDIUM|STASH","reason":"one sentence why worth adding","key_factor":"one short phrase to monitor","dynasty_context":"one sentence on ${isDyn?'dynasty long-term':'this season'} value"}]}`;
+      const system  = `CURRENT DATE: May 2026. The 2025 NFL season is complete. 2026 rookies are the upcoming class. | You are GridironIQ's waiver wire analyst for ${isDyn?'dynasty':'redraft'} PPR fantasy. Find 5-7 best waiver adds at ${pos} likely available in a typical ${isDyn?'12-team dynasty':'redraft'} league. ${isDyn?'Prioritize: rookies, players age ≤25, backups with path to starts, high upside over proven veteran value':'Prioritize: current starter opportunity, volume, matchups'}. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
+      const prompt  = `My current ${pos}s: ${myStr}\n\nWaiver candidates:\n${candStr}${ctx?`\n\nContext: ${ctx}`:''}`;
+      try {
+        const res = await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1200,system,messages:[{role:'user',content:prompt}]})});
+        const raw=await res.text(); let d; try{d=JSON.parse(raw);}catch{throw new Error('Bad response');}
+        if(!res.ok||d.type==='error') throw new Error(d.error?.message||'HTTP '+res.status);
+        const txt=d.content?.find(b=>b.type==='text')?.text||'';
+        const m=txt.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+        if(!m) throw new Error('No JSON');
+        wireAnalysis=JSON.parse(m[0]);
+        renderWireResults(wireAnalysis);
+        saveWaiverTargets(wireAnalysis);
+      } catch(e) {
+        el.innerHTML=`<div class="card error-card" style="font-size:11px">${escHtml(e.message)}</div><button class="btn btn-secondary" style="margin-top:8px" onclick="showWireSetupScreen()">← BACK</button>`;
+      }
+    }
+
+    function renderWireResults(data) {
+      const BORDER={HIGH:'var(--start)',MEDIUM:'#fbbf24',STASH:'var(--stash)'};
+      const BCLS  ={HIGH:'priority-high',MEDIUM:'priority-medium',STASH:'priority-stash'};
+      const ICON  ={HIGH:'★',MEDIUM:'◈',STASH:'◎'};
+      document.getElementById('wire-results-screen').innerHTML = `
+        ${data.roster_need?`<div class="card narrative-card"><div class="narrative-label">ROSTER INTELLIGENCE · ${wirePosition}</div><div class="narrative-text">${escHtml(data.roster_need)}</div></div>`:''}
+        ${(data.targets||[]).map(t=>{
+          const pri=(t.priority||'MEDIUM').toUpperCase();
+          return `<div class="wire-card" style="border-left:3px solid ${BORDER[pri]||BORDER.MEDIUM}">
+            <div class="wire-top">
+              <span class="priority-badge ${BCLS[pri]||BCLS.MEDIUM}">${ICON[pri]||''} ${pri}</span>
+              <div style="flex:1;min-width:0"><div class="wire-name">${escHtml(t.name)}</div></div>
+            </div>
+            <div class="wire-body">
+              <div class="wire-reason">${escHtml(t.reason||'')}</div>
+              <div class="tags">${t.key_factor?`<div class="tag tag-key">◎ ${escHtml(t.key_factor)}</div>`:''}</div>
+              ${t.dynasty_context?`<div class="wire-dynasty">${escHtml(t.dynasty_context)}</div>`:''}
+            </div>
+          </div>`;
+        }).join('')}
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="showWireSetupScreen()">↩ NEW SEARCH</button>
+          <button class="btn btn-secondary" onclick="closeWireView()">← ROSTER</button>
+        </div>`;
+    }
+
+    async function saveWaiverTargets(data) {
+      if (!sleeperUser||!currentLeague||!data?.targets?.length) return;
+      try {
+        await sb.from('waiver_targets').insert(data.targets.map(t=>({
+          sleeper_username:sleeperUser.username, league_id:currentLeague.league_id,
+          league_type:leagueType, position:wirePosition,
+          player_name:t.name, priority:t.priority, reason:t.reason, key_factor:t.key_factor,
+        })));
+      } catch(_) {}
     }
 
     /* ── TRADE ANALYZER ─────────────────────────────────────── */
