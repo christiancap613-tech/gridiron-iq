@@ -2003,14 +2003,15 @@
         el.innerHTML = `<div class="card error-card" style="font-size:11px">No waiver candidates found for ${pos}.</div><button class="btn btn-secondary" style="margin-top:8px" onclick="showWireSetupScreen()">← BACK</button>`;
         return;
       }
-      const myStr   = ALL_PLAYERS.filter(p=>p.position===pos).map(p=>`${p.name} (${p.team}, Age ${p.age}, Yr ${p.exp}, ${p.status})`).join(', ')||'None';
+      const myPosStr  = ALL_PLAYERS.filter(p=>p.position===pos).map(p=>`${p.name} (${p.team}, Age ${p.age}, Yr ${p.exp}, ${p.status})`).join(', ')||'None';
+      const fullRosterStr = ALL_PLAYERS.map(p=>`${p.name} [${p.position}] (${p.team}, Age ${p.age}, Yr ${p.exp}, ${p.status})`).join(', ')||'None';
       const candStr = cands.map(p=>`${p.name}, ${p.team}, Age ${p.age}, Yr ${p.exp}${p.depth<=5?', Depth '+p.depth:''}`).join('\n');
-      const SCHEMA  = `{"roster_need":"one sentence on this team's ${pos} situation","targets":[{"name":"string","priority":"HIGH|MEDIUM|STASH","reason":"one sentence why worth adding","key_factor":"one short phrase to monitor","dynasty_context":"one sentence on ${isDyn?'dynasty long-term':'this season'} value"}]}`;
-      const system  = `CURRENT DATE: May 2026. The 2025 NFL season is complete. 2026 rookies are the upcoming class. | You are GridironIQ's waiver wire analyst for ${isDyn?'dynasty':'redraft'} PPR fantasy. Find 5-7 best waiver adds at ${pos} likely available in a typical ${isDyn?'12-team dynasty':'redraft'} league. ${isDyn?'Prioritize: rookies, players age ≤25, backups with path to starts, high upside over proven veteran value':'Prioritize: current starter opportunity, volume, matchups'}. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
-      const prompt  = `My current ${pos}s: ${myStr}\n\nWaiver candidates:\n${candStr}${ctx?`\n\nContext: ${ctx}`:''}`;
+      const SCHEMA  = `{"roster_need":"one sentence on this team's ${pos} situation","targets":[{"name":"string","rank":1,"reason":"one decisive sentence why this fits THIS user's roster specifically","key_factor":"one short phrase to monitor","dynasty_context":"one sentence on ${isDyn?'dynasty long-term':'this season'} value","drop_name":"name of player to drop from user roster (only for rank 1-3, null for STASH)","drop_verdict":"'Add X, Drop Y because Z' — addresses matchup value, ROS outlook${isDyn?', dynasty outlook':''} (only for rank 1-3, null for STASH)"}]}`;
+      const system  = `CURRENT DATE: June 2026. The 2025 NFL season is complete. 2026 rookies are the upcoming class. | You are GridironIQ's waiver wire analyst for ${isDyn?'dynasty':'redraft'} PPR fantasy. Find 5-7 best waiver adds at ${pos} likely available in a typical ${isDyn?'12-team dynasty':'redraft'} league. ${isDyn?'Prioritize: rookies, players age ≤25, backups with path to starts, high upside over proven veteran value':'Prioritize: current starter opportunity, volume, matchups'}. Rank the top 3 picks as rank 1, 2, 3 — the rest as rank "STASH". For rank 1-3, choose the most logical drop from the user's FULL ROSTER (not just ${pos}s) — do NOT suggest dropping taxi/reserve players unless the add is a clear upgrade. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
+      const prompt  = `My current ${pos}s: ${myPosStr}\n\nMy full roster: ${fullRosterStr}\n\nWaiver candidates:\n${candStr}${ctx?`\n\nContext: ${ctx}`:''}`;
       try {
         const res = await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1200,system,messages:[{role:'user',content:prompt}]})});
+          body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1800,system,messages:[{role:'user',content:prompt}]})});
         const raw=await res.text(); let d; try{d=JSON.parse(raw);}catch{throw new Error('Bad response');}
         if(!res.ok||d.type==='error') throw new Error(d.error?.message||'HTTP '+res.status);
         const txt=d.content?.find(b=>b.type==='text')?.text||'';
@@ -2025,16 +2026,27 @@
     }
 
     function renderWireResults(data) {
-      const BORDER={HIGH:'var(--start)',MEDIUM:'#fbbf24',STASH:'var(--stash)'};
-      const BCLS  ={HIGH:'priority-high',MEDIUM:'priority-medium',STASH:'priority-stash'};
-      const ICON  ={HIGH:'★',MEDIUM:'◈',STASH:'◎'};
+      const rankLabel = r => {
+        const n = parseInt(r);
+        if (n === 1) return { label:'#1 PRIORITY', cls:'priority-high',   border:'var(--start)', icon:'★' };
+        if (n === 2) return { label:'#2 PRIORITY', cls:'priority-medium',  border:'#fbbf24',      icon:'◈' };
+        if (n === 3) return { label:'#3 PRIORITY', cls:'priority-medium',  border:'#fbbf24',      icon:'◈' };
+        return               { label:'STASH',       cls:'priority-stash',   border:'var(--stash)', icon:'◎' };
+      };
+      const targets = data.targets || [];
+      const topPicks = targets.filter(t => [1,2,3].includes(parseInt(t.rank)));
+      const dropSection = topPicks.length ? `
+        <div class="card narrative-card" style="margin-top:12px">
+          <div class="narrative-label">WHO TO DROP</div>
+          ${topPicks.map(t => t.drop_verdict ? `<div class="wire-reason" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">▸ ${escHtml(t.drop_verdict)}</div>` : '').join('')}
+        </div>` : '';
       document.getElementById('wire-results-screen').innerHTML = `
         ${data.roster_need?`<div class="card narrative-card"><div class="narrative-label">ROSTER INTELLIGENCE · ${wirePosition}</div><div class="narrative-text">${escHtml(data.roster_need)}</div></div>`:''}
-        ${(data.targets||[]).map(t=>{
-          const pri=(t.priority||'MEDIUM').toUpperCase();
-          return `<div class="wire-card" style="border-left:3px solid ${BORDER[pri]||BORDER.MEDIUM}">
+        ${targets.map(t=>{
+          const {label,cls,border,icon} = rankLabel(t.rank);
+          return `<div class="wire-card" style="border-left:3px solid ${border}">
             <div class="wire-top">
-              <span class="priority-badge ${BCLS[pri]||BCLS.MEDIUM}">${ICON[pri]||''} ${pri}</span>
+              <span class="priority-badge ${cls}">${icon} ${label}</span>
               <div style="flex:1;min-width:0"><div class="wire-name">${escHtml(t.name)}</div></div>
             </div>
             <div class="wire-body">
@@ -2044,6 +2056,7 @@
             </div>
           </div>`;
         }).join('')}
+        ${dropSection}
         <div class="btn-row">
           <button class="btn btn-secondary" onclick="showWireSetupScreen()">↩ NEW SEARCH</button>
           <button class="btn btn-secondary" onclick="closeWireView()">← ROSTER</button>
