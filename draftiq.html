@@ -907,7 +907,7 @@
         .map(([k,v]) => `${v} ${k}`).join(', ');
       const scoringLabel = { standard:'Standard', half_ppr:'Half PPR', full_ppr:'Full PPR' }[s.scoring_format] || s.scoring_format;
       const totalStarters = Object.entries(s.roster_slots).filter(([k]) => k !== 'BENCH').reduce((sum,[,v]) => sum+v, 0);
-      const targetPlayers = Math.min(s.num_teams * s.total_rounds, 60);
+      const targetPlayers = 30;
 
       const SCHEMA = `{"board":[{"rank":1,"name":"string","position":"RB|WR|QB|TE|K|DEF","team":"NFL team abbreviation","tier":1,"reasoning":"one sentence on value in this league","confidence":9}]}`;
       const system = `DATE: July 19, 2026. The 2025 NFL season is over. 2026 rookies are this year's class. You are DraftIQ, an expert ${scoringLabel} fantasy football analyst. Generate a pre-draft board of exactly ${targetPlayers} players for a ${s.num_teams}-team ${scoringLabel} ${s.draft_type} draft with these roster slots: ${slotsStr} (${totalStarters} starters + ${s.roster_slots.BENCH||0} bench). Tiers: 1=Elite (ranks 1-10), 2=Strong Starter (11-30), 3=Solid Starter (31-50), 4=Flex/Depth (51+). Rank by projected fantasy value for this scoring format. Keep reasoning under 15 words per player. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
@@ -918,7 +918,7 @@
       try {
         const res = await fetch(WORKER_URL, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 3000, system, messages: [{ role: 'user', content: prompt }] })
+          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 4000, system, messages: [{ role: 'user', content: prompt }] })
         });
         const raw = await res.text();
         let d; try { d = JSON.parse(raw); } catch { throw new Error('Proxy returned non-JSON: ' + raw.slice(0, 300)); }
