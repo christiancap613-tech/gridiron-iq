@@ -1037,7 +1037,7 @@
           <div class="pc-right">
             <div class="pc-conf">CONF ${p.confidence||'?'}/10</div>
             ${p.available
-              ? `<button class="btn-pick${myTurn?' my-turn':''}" onclick="openPickModal(${JSON.stringify(p.name)})">PICK</button>`
+              ? `<button class="btn-pick${myTurn?' my-turn':''}" data-name="${escHtml(p.name)}" onclick="openPickModal(this.dataset.name)">PICK</button>`
               : `<div class="drafted-badge ${p.drafted_by==='me'?'drafted-me':'drafted-other'}">${p.drafted_by==='me'?'★ ME':'DRAFTED'}</div>`
             }
           </div>
