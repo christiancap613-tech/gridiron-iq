@@ -646,6 +646,10 @@
 
       <!-- Board column -->
       <div class="board-col" id="board-col">
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.07);border-bottom:1px solid rgba(251,191,36,0.22)">
+          <span style="font-size:14px;flex-shrink:0;margin-top:1px">⚠</span>
+          <span style="font-size:11px;color:#fbbf24;line-height:1.5;letter-spacing:0.2px">DraftIQ rankings are AI-generated starting points. Always verify player statuses, team situations, and injuries before drafting.</span>
+        </div>
         <div class="board-filters" id="board-filters">
           <button class="filter-btn active" data-pos="ALL" onclick="setFilter('ALL')">ALL</button>
           <button class="filter-btn" data-pos="QB" onclick="setFilter('QB')">QB</button>
@@ -910,7 +914,7 @@
       const targetPlayers = 30;
 
       const SCHEMA = `{"board":[{"rank":1,"name":"string","position":"RB|WR|QB|TE|K|DEF","team":"NFL team abbreviation","tier":1,"reasoning":"one sentence on value in this league","confidence":9}]}`;
-      const system = `DATE: July 19, 2026. The 2025 NFL season is over. 2026 rookies are this year's class. You are DraftIQ, an expert ${scoringLabel} fantasy football analyst. Generate a pre-draft board of exactly ${targetPlayers} players for a ${s.num_teams}-team ${scoringLabel} ${s.draft_type} draft with these roster slots: ${slotsStr} (${totalStarters} starters + ${s.roster_slots.BENCH||0} bench). Tiers: 1=Elite (ranks 1-10), 2=Strong Starter (11-30), 3=Solid Starter (31-50), 4=Flex/Depth (51+). Rank by projected fantasy value for this scoring format. Keep reasoning under 15 words per player. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
+      const system = `DATE: July 19, 2026. The 2025 NFL season is over. 2026 rookies are this year's class. You are DraftIQ, an expert ${scoringLabel} fantasy football analyst. Generate a pre-draft board of exactly ${targetPlayers} players for a ${s.num_teams}-team ${scoringLabel} ${s.draft_type} draft with these roster slots: ${slotsStr} (${totalStarters} starters + ${s.roster_slots.BENCH||0} bench). Tiers: 1=Elite (ranks 1-10), 2=Strong Starter (11-30), 3=Solid Starter (31-50), 4=Flex/Depth (51+). Rank by projected fantasy value for this scoring format. Keep reasoning under 15 words per player. IMPORTANT: Do not assume any player's current team, injury status, or contract situation — if a player's NFL status may have changed since your training data cutoff, flag it in their reasoning (e.g. "verify team situation"). Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
       const prompt = `League: ${s.num_teams} teams, ${scoringLabel}, ${s.draft_type} draft.\nUser's draft position: ${s.draft_position}.\nGenerate exactly ${targetPlayers} players ranked for this league.`;
 
       document.getElementById('gen-sub').textContent = 'CONSULTING 2026 PROJECTIONS · BUILDING TIERS';
