@@ -662,7 +662,7 @@
         </div>
         <div id="reprio-bar" class="reprio-bar hidden" style="margin:8px 12px 0">
           <div class="reprio-dot"></div>
-          <span>DraftIQ is re-ranking available players…</span>
+          <span>Board syncing...</span>
         </div>
         <div id="board-list"></div>
       </div>
@@ -1118,8 +1118,8 @@
         return;
       }
 
-      // Reprioritize
-      reprioritize();
+      // AI sync every 3 picks; client-side re-sort handles the rest instantly
+      if (draftPicks.length % 3 === 0) reprioritize();
     }
 
     /* ── REPRIORITIZATION ─────────────────────────────────────── */
