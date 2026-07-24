@@ -503,7 +503,16 @@
           </div>
         </div>
 
-        <!-- Draft Type + Rounds + Position -->
+        <!-- League Mode + Draft Type + Rounds + Position -->
+        <div class="form-field">
+          <label class="form-label">LEAGUE MODE</label>
+          <div class="seg-control" id="seg-league-mode">
+            <button class="seg-btn active" data-val="redraft" type="button">REDRAFT</button>
+            <button class="seg-btn" data-val="dynasty" type="button">DYNASTY</button>
+            <button class="seg-btn" data-val="keeper" type="button">KEEPER</button>
+          </div>
+        </div>
+
         <div class="form-row">
           <div class="form-field">
             <label class="form-label">DRAFT TYPE</label>
@@ -869,6 +878,7 @@
 
       const numTeams = parseInt(getSegVal('seg-teams'));
       const scoringFormat = getSegVal('seg-scoring');
+      const leagueMode = getSegVal('seg-league-mode');
       const draftType = getSegVal('seg-draft-type');
       const totalRounds = parseInt(document.getElementById('f-rounds').value) || 15;
       const draftPosition = parseInt(document.getElementById('f-position').value) || 1;
@@ -883,7 +893,7 @@
       }
 
       const rosterSlots = getRosterSlots();
-      draftSession = { league_name: leagueName, num_teams: numTeams, scoring_format: scoringFormat, roster_slots: rosterSlots, draft_type: draftType, total_rounds: totalRounds, draft_position: draftPosition };
+      draftSession = { league_name: leagueName, num_teams: numTeams, scoring_format: scoringFormat, league_mode: leagueMode, roster_slots: rosterSlots, draft_type: draftType, total_rounds: totalRounds, draft_position: draftPosition };
 
       showStage('generating');
 
@@ -914,7 +924,13 @@
       const targetPlayers = 30;
 
       const SCHEMA = `{"board":[{"rank":1,"name":"string","position":"RB|WR|QB|TE|K|DEF","team":"NFL team abbreviation","tier":1,"reasoning":"one sentence on value in this league","confidence":9}]}`;
-      const system = `DATE: July 19, 2026. The 2025 NFL season is over. 2026 rookies are this year's class. You are DraftIQ, an expert ${scoringLabel} fantasy football analyst. Generate a pre-draft board of exactly ${targetPlayers} players for a ${s.num_teams}-team ${scoringLabel} ${s.draft_type} draft with these roster slots: ${slotsStr} (${totalStarters} starters + ${s.roster_slots.BENCH||0} bench). Tiers: 1=Elite (ranks 1-10), 2=Strong Starter (11-30), 3=Solid Starter (31-50), 4=Flex/Depth (51+). Rank by projected fantasy value for this scoring format. Keep reasoning under 15 words per player. IMPORTANT: Do not assume any player's current team, injury status, or contract situation — if a player's NFL status may have changed since your training data cutoff, flag it in their reasoning (e.g. "verify team situation"). Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
+      const leagueMode = s.league_mode || 'redraft';
+      const modeInstructions = leagueMode === 'dynasty'
+        ? 'This is a DYNASTY league. Prioritize age, long-term upside, and rookie value heavily. Veterans over 30 should rank significantly lower than in redraft.'
+        : leagueMode === 'keeper'
+        ? 'This is a KEEPER league. Balance current-season production with multi-year value. Penalize aging veterans (30+) moderately.'
+        : 'This is a REDRAFT league. Rank ONLY by projected 2026 season fantasy output. Do NOT factor in dynasty or long-term value. Aging veterans (age 30+) must be ranked strictly by their realistic 2026 production — not career reputation. A 31-year-old declining WR1 belongs outside the top 20 even if they were elite 3 years ago.';
+      const system = `DATE: July 19, 2026. The 2025 NFL season is over. 2026 rookies are this year's class. You are DraftIQ, an expert ${scoringLabel} fantasy football analyst. ${modeInstructions} Generate a pre-draft board of exactly ${targetPlayers} players for a ${s.num_teams}-team ${scoringLabel} ${s.draft_type} draft with these roster slots: ${slotsStr} (${totalStarters} starters + ${s.roster_slots.BENCH||0} bench). Tiers: 1=Elite (ranks 1-10), 2=Strong Starter (11-30), 3=Solid Starter (31-50), 4=Flex/Depth (51+). Keep reasoning under 15 words per player. IMPORTANT: Do not assume any player's current team, injury status, or contract situation — if a player's NFL status may have changed since your training data cutoff, flag it in their reasoning (e.g. "verify team situation"). Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
       const prompt = `League: ${s.num_teams} teams, ${scoringLabel}, ${s.draft_type} draft.\nUser's draft position: ${s.draft_position}.\nGenerate exactly ${targetPlayers} players ranked for this league.`;
 
       document.getElementById('gen-sub').textContent = 'CONSULTING 2026 PROJECTIONS · BUILDING TIERS';
