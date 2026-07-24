@@ -1119,28 +1119,52 @@
     }
 
     /* ── REPRIORITIZATION ─────────────────────────────────────── */
+    function showReprioState(on) {
+      document.getElementById('reprio-bar').classList.toggle('hidden', !on);
+      const badge = document.getElementById('draft-turn-badge');
+      if (on) {
+        badge.dataset.prevText  = badge.textContent;
+        badge.dataset.prevClass = badge.className;
+        badge.textContent = '↻ UPDATING...';
+        badge.className = 'draft-turn-badge';
+        badge.style.color = 'var(--flex)';
+        badge.style.borderColor = 'rgba(251,191,36,0.3)';
+        badge.style.background = 'rgba(251,191,36,0.08)';
+      } else {
+        badge.textContent = badge.dataset.prevText || '';
+        badge.className = badge.dataset.prevClass || 'draft-turn-badge turn-other';
+        badge.style.color = badge.style.borderColor = badge.style.background = '';
+      }
+    }
+
     async function reprioritize() {
       if (isReprioritizing) { pendingReprioritize = true; return; }
       isReprioritizing = true;
-      document.getElementById('reprio-bar').classList.remove('hidden');
+      showReprioState(true);
 
       const available = draftBoard.filter(p => p.available).sort((a,b) => a.rank - b.rank);
-      if (!available.length) { isReprioritizing = false; document.getElementById('reprio-bar').classList.add('hidden'); return; }
+      if (!available.length) { isReprioritizing = false; showReprioState(false); return; }
 
       const scoringLabel = { standard:'Standard', half_ppr:'Half PPR', full_ppr:'Full PPR' }[draftSession.scoring_format] || draftSession.scoring_format;
-      const picksStr = draftPicks.map(p => `Pick ${p.pick_number}: ${p.player_name} (${p.position}) — ${p.drafted_by === 'me' ? 'MY PICK' : 'other team'}`).join('\n');
-      const rosterStr = myRoster.map(p => `${p.player_name} (${p.position})`).join(', ') || 'None yet';
-      const needsStr  = getRosterNeedsStr();
-      const availStr  = available.map((p,i) => `${i+1}. ${p.name} (${p.position}, ${p.team||'?'})`).join('\n');
 
-      const SCHEMA = `{"board":[{"rank":1,"name":"string","position":"string","team":"string","tier":1,"reasoning":"string","confidence":9}]}`;
-      const system = `DATE: July 19, 2026. You are DraftIQ. Re-rank ONLY the available players listed below based on current draft state and the user's needs. Return the same JSON structure. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
-      const prompt = `DRAFT: Pick ${currentPickNumber} of ${totalPicks} (Round ${getCurrentRound()})\nSCORING: ${scoringLabel}\n\nPICKS MADE:\n${picksStr||'None'}\n\nMY ROSTER: ${rosterStr}\nMY NEEDS: ${needsStr}\n\nRE-RANK THESE ${available.length} AVAILABLE PLAYERS:\n${availStr}`;
+      // Compact picks summary — position counts + my picks only (avoids 100+ line pick log)
+      const posCounts = {};
+      draftPicks.forEach(p => { posCounts[p.position] = (posCounts[p.position]||0) + 1; });
+      const picksSum = Object.entries(posCounts).map(([pos,n]) => `${pos}×${n}`).join(', ') || 'None';
+      const rosterStr = myRoster.map(p => `${p.player_name}(${p.position})`).join(', ') || 'None';
+      const needsStr  = getRosterNeedsStr();
+
+      // Only top 20 available — re-ranking beyond that has diminishing value mid-draft
+      const top20 = available.slice(0, 20).map((p,i) => `${i+1}.${p.name}(${p.position})`).join(',');
+
+      const SCHEMA = `{"board":[{"rank":1,"name":"string","tier":1,"reasoning":"≤8 words","confidence":8}]}`;
+      const system = `DATE: July 19, 2026. You are DraftIQ. Re-rank these available players for a ${scoringLabel} fantasy draft. Be concise. Respond ONLY with valid JSON: ${SCHEMA}`;
+      const prompt = `Pick ${currentPickNumber}/${totalPicks} Rd${getCurrentRound()}. Drafted by pos: ${picksSum}. My roster: ${rosterStr}. My needs: ${needsStr}.\nRe-rank: ${top20}`;
 
       try {
         const res = await fetch(WORKER_URL, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 4000, system, messages: [{ role: 'user', content: prompt }] })
+          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 2000, system, messages: [{ role: 'user', content: prompt }] })
         });
         const raw = await res.text();
         let d; try { d = JSON.parse(raw); } catch { throw new Error('Bad response'); }
@@ -1164,7 +1188,7 @@
         console.error('Reprioritize failed:', e);
       } finally {
         isReprioritizing = false;
-        document.getElementById('reprio-bar').classList.add('hidden');
+        showReprioState(false);
         if (pendingReprioritize) { pendingReprioritize = false; reprioritize(); }
       }
     }
