@@ -1203,8 +1203,7 @@
         return;
       }
 
-      // AI sync every 3 picks; client-side re-sort handles the rest instantly
-      if (draftPicks.length % 3 === 0) reprioritize();
+      reprioritize();
     }
 
     /* ── REPRIORITIZATION ─────────────────────────────────────── */
