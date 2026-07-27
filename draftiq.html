@@ -1235,25 +1235,18 @@
       if (!available.length) { isReprioritizing = false; showReprioState(false); return; }
 
       const scoringLabel = { standard:'Standard', half_ppr:'Half PPR', full_ppr:'Full PPR' }[draftSession.scoring_format] || draftSession.scoring_format;
-
-      // Compact picks summary — position counts + my picks only (avoids 100+ line pick log)
-      const posCounts = {};
-      draftPicks.forEach(p => { posCounts[p.position] = (posCounts[p.position]||0) + 1; });
-      const picksSum = Object.entries(posCounts).map(([pos,n]) => `${pos}×${n}`).join(', ') || 'None';
-      const rosterStr = myRoster.map(p => `${p.player_name}(${p.position})`).join(', ') || 'None';
+      const rosterStr = myRoster.map(p => `${p.player_name}(${p.position})`).join(',') || 'None';
       const needsStr  = getRosterNeedsStr();
+      const top10 = available.slice(0, 10).map(p => `${p.name}(${p.position})`).join(',');
 
-      // Only top 20 available — re-ranking beyond that has diminishing value mid-draft
-      const top20 = available.slice(0, 20).map((p,i) => `${i+1}.${p.name}(${p.position})`).join(',');
-
-      const SCHEMA = `{"board":[{"rank":1,"name":"string","tier":1,"reasoning":"≤8 words","confidence":8}]}`;
-      const system = `DATE: July 19, 2026. You are DraftIQ. Re-rank these available players for a ${scoringLabel} fantasy draft. Be concise. Respond ONLY with valid JSON: ${SCHEMA}`;
-      const prompt = `Pick ${currentPickNumber}/${totalPicks} Rd${getCurrentRound()}. Drafted by pos: ${picksSum}. My roster: ${rosterStr}. My needs: ${needsStr}.\nRe-rank: ${top20}`;
+      const SCHEMA = `{"board":[{"name":"string","rank":1,"tier":1,"reasoning":"≤6 words"}]}`;
+      const system = `You are DraftIQ. Given a live draft state, re-rank the top available players by value for the user's roster needs. Respond ONLY with valid JSON: ${SCHEMA}`;
+      const prompt = `Pick ${currentPickNumber}, Rd${getCurrentRound()}. My roster: ${rosterStr}. Needs: ${needsStr}. Re-rank these top available (keep best order): ${top10}`;
 
       try {
         const res = await fetch(WORKER_URL, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 2000, system, messages: [{ role: 'user', content: prompt }] })
+          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1500, system, messages: [{ role: 'user', content: prompt }] })
         });
         const raw = await res.text();
         let d; try { d = JSON.parse(raw); } catch { throw new Error('Bad response'); }
