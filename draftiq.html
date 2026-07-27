@@ -657,7 +657,7 @@
       <div class="board-col" id="board-col">
         <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;background:rgba(251,191,36,0.07);border-bottom:1px solid rgba(251,191,36,0.22)">
           <span style="font-size:14px;flex-shrink:0;margin-top:1px">⚠</span>
-          <span style="font-size:11px;color:#fbbf24;line-height:1.5;letter-spacing:0.2px">DraftIQ rankings are AI-generated starting points. Always verify player statuses, team situations, and injuries before drafting.</span>
+          <span id="board-source-note" style="font-size:11px;color:#fbbf24;line-height:1.5;letter-spacing:0.2px">DraftIQ rankings are AI-generated starting points. Always verify player statuses, team situations, and injuries before drafting.</span>
         </div>
         <div class="board-filters" id="board-filters">
           <button class="filter-btn active" data-pos="ALL" onclick="setFilter('ALL')">ALL</button>
@@ -914,31 +914,79 @@
       generateBoard();
     }
 
+    /* ── FANTASYCALC FETCH ────────────────────────────────────── */
+    async function fetchFantasyCalc(s) {
+      const isDynasty = s.league_mode === 'dynasty';
+      const ppr = { standard: 0, half_ppr: 0.5, full_ppr: 1 }[s.scoring_format] ?? 0.5;
+      const url = `https://api.fantasycalc.com/values/current?isDynasty=${isDynasty}&numQbs=1&numTeams=${s.num_teams}&ppr=${ppr}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`FantasyCalc returned ${res.status}`);
+      const data = await res.json();
+      return data
+        .sort((a, b) => a.overallRank - b.overallRank)
+        .slice(0, 40)
+        .map(entry => ({
+          rank:     entry.overallRank,
+          name:     entry.player.name,
+          position: entry.player.position,
+          team:     entry.player.maybeTeam || '?',
+          tier:     entry.maybeTier || null,
+          value:    entry.value,
+        }));
+    }
+
     /* ── BOARD GENERATION ─────────────────────────────────────── */
     async function generateBoard() {
       const s = draftSession;
       const slotsStr = Object.entries(s.roster_slots).filter(([,v]) => v > 0)
         .map(([k,v]) => `${v} ${k}`).join(', ');
       const scoringLabel = { standard:'Standard', half_ppr:'Half PPR', full_ppr:'Full PPR' }[s.scoring_format] || s.scoring_format;
-      const totalStarters = Object.entries(s.roster_slots).filter(([k]) => k !== 'BENCH').reduce((sum,[,v]) => sum+v, 0);
-      const targetPlayers = 30;
+      const leagueMode   = s.league_mode || 'redraft';
 
-      const SCHEMA = `{"board":[{"rank":1,"name":"string","position":"RB|WR|QB|TE|K|DEF","team":"NFL team abbreviation","tier":1,"reasoning":"one sentence on value in this league","confidence":9}]}`;
-      const leagueMode = s.league_mode || 'redraft';
-      const modeInstructions = leagueMode === 'dynasty'
-        ? 'This is a DYNASTY league. Prioritize age, long-term upside, and rookie value heavily. Veterans over 30 should rank significantly lower than in redraft.'
-        : leagueMode === 'keeper'
-        ? 'This is a KEEPER league. Balance current-season production with multi-year value. Penalize aging veterans (30+) moderately.'
-        : 'This is a REDRAFT league. Rank ONLY by projected 2026 season fantasy output. Do NOT factor in dynasty or long-term value. Aging veterans (age 30+) must be ranked strictly by their realistic 2026 production — not career reputation. A 31-year-old declining WR1 belongs outside the top 20 even if they were elite 3 years ago.';
-      const system = `DATE: July 19, 2026. The 2025 NFL season is over. 2026 rookies are this year's class. You are DraftIQ, an expert ${scoringLabel} fantasy football analyst. ${modeInstructions} Generate a pre-draft board of exactly ${targetPlayers} players for a ${s.num_teams}-team ${scoringLabel} ${s.draft_type} draft with these roster slots: ${slotsStr} (${totalStarters} starters + ${s.roster_slots.BENCH||0} bench). Tiers: 1=Elite (ranks 1-10), 2=Strong Starter (11-30), 3=Solid Starter (31-50), 4=Flex/Depth (51+). Keep reasoning under 15 words per player. IMPORTANT: Do not assume any player's current team, injury status, or contract situation — if a player's NFL status may have changed since your training data cutoff, flag it in their reasoning (e.g. "verify team situation"). Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
-      const prompt = `League: ${s.num_teams} teams, ${scoringLabel}, ${s.draft_type} draft.\nUser's draft position: ${s.draft_position}.\nGenerate exactly ${targetPlayers} players ranked for this league.`;
+      // ── Step 1: fetch live FantasyCalc data ──────────────────
+      document.getElementById('gen-sub').textContent = 'FETCHING LIVE 2026 PLAYER DATA...';
+      let fcPlayers = null;
+      let fcFailed  = false;
+      try {
+        fcPlayers = await fetchFantasyCalc(s);
+      } catch (e) {
+        console.warn('FantasyCalc fetch failed, falling back to AI-only:', e);
+        fcFailed = true;
+      }
 
-      document.getElementById('gen-sub').textContent = 'CONSULTING 2026 PROJECTIONS · BUILDING TIERS';
+      // ── Step 2: build AI prompt ───────────────────────────────
+      document.getElementById('gen-sub').textContent = 'DRAFTIQ IS ANALYZING YOUR LEAGUE...';
+
+      const SCHEMA = `{"board":[{"rank":1,"name":"string","position":"RB|WR|QB|TE|K|DEF","team":"string","tier":1,"reasoning":"≤12 words on value for this league","confidence":9}]}`;
+
+      let system, prompt;
+
+      if (fcPlayers) {
+        const playerList = fcPlayers
+          .map(p => `${p.rank}. ${p.name} (${p.position}, ${p.team})${p.tier ? ' Tier'+p.tier : ''}`)
+          .join('\n');
+        const modeNote = leagueMode === 'dynasty'
+          ? 'DYNASTY league: long-term upside and age matter.'
+          : leagueMode === 'keeper'
+          ? 'KEEPER league: balance current production with multi-year value.'
+          : 'REDRAFT league: 2026 season output only.';
+        system = `You are DraftIQ. ${modeNote} Below is a live FantasyCalc ranking list for a ${s.num_teams}-team ${scoringLabel} league. Use these rankings as your EXACT baseline — do NOT reorder them. Your ONLY job is to add a reasoning field (≤12 words) and confidence score (1-10) to each player, and assign a tier (1=Elite top ~8, 2=Strong Starter, 3=Solid Starter, 4=Depth). Return all players in the SAME ORDER as the input list. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
+        prompt = `League: ${s.num_teams} teams, ${scoringLabel}, pick ${s.draft_position}.\nRoster slots: ${slotsStr}.\n\nFantasyCalc rankings — add reasoning and confidence, keep order:\n${playerList}`;
+      } else {
+        // Fallback: pure AI generation
+        const modeInstructions = leagueMode === 'dynasty'
+          ? 'DYNASTY league. Prioritize age, upside, rookie value. Veterans 30+ rank lower.'
+          : leagueMode === 'keeper'
+          ? 'KEEPER league. Balance current production with multi-year value.'
+          : 'REDRAFT league. Rank strictly by projected 2026 season output. Age 30+ veterans ranked by realistic 2026 production only, not career reputation.';
+        system = `DATE: July 19, 2026. 2025 NFL season is over. You are DraftIQ, an expert ${scoringLabel} fantasy analyst. ${modeInstructions} Generate 30 players ranked for a ${s.num_teams}-team ${scoringLabel} draft. Tiers: 1=Elite, 2=Strong Starter, 3=Solid Starter, 4=Depth. Reasoning ≤12 words each. Flag any player whose team/status may have changed. Respond ONLY with valid JSON: ${SCHEMA}`;
+        prompt = `${s.num_teams} teams, ${scoringLabel}, ${s.draft_type} draft, pick ${s.draft_position}. Slots: ${slotsStr}. Generate 30-player board.`;
+      }
 
       try {
         const res = await fetch(WORKER_URL, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 4000, system, messages: [{ role: 'user', content: prompt }] })
+          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 3000, system, messages: [{ role: 'user', content: prompt }] })
         });
         const raw = await res.text();
         let d; try { d = JSON.parse(raw); } catch { throw new Error('Proxy returned non-JSON: ' + raw.slice(0, 300)); }
@@ -947,8 +995,17 @@
         const m = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
         if (!m) throw new Error('No valid JSON in AI response');
         const parsed = JSON.parse(m[0]);
-        const board = (parsed.board || []).map(p => ({ ...p, available: true }));
+        // Merge FC team/value data back in where AI may have dropped it
+        const fcMap = {};
+        if (fcPlayers) fcPlayers.forEach(p => { fcMap[p.name] = p; });
+        const board = (parsed.board || []).map(p => ({
+          ...p,
+          team: p.team || fcMap[p.name]?.team || '?',
+          available: true,
+        }));
         if (!board.length) throw new Error('AI returned an empty board');
+        // store whether live data was used, for the banner
+        window._fcFailed = fcFailed;
 
         // Save to Supabase
         if (sessionId) {
@@ -970,6 +1027,18 @@
         renderBoard();
         renderPickTracker();
         renderMyRoster();
+
+        // Update source banner
+        const note = document.getElementById('board-source-note');
+        if (note) {
+          if (fcFailed) {
+            note.textContent = '⚠ Live player data unavailable — rankings are AI-generated estimates. Verify all statuses before drafting.';
+            note.style.color = '#f87171';
+          } else {
+            note.textContent = '✓ Rankings sourced from live FantasyCalc data. AI reasoning layered on top. Always verify injuries and depth charts.';
+            note.style.color = '#86efac';
+          }
+        }
       } catch (e) {
         const errEl = document.getElementById('gen-error');
         document.getElementById('gen-error-msg').textContent = 'Board generation failed: ' + e.message;
