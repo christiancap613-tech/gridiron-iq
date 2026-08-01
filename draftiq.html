@@ -342,9 +342,24 @@
     .pc-top { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
     .pc-name { font-size: 13px; font-weight: 500; color: var(--text-1); }
     .pc-team { font-size: 10px; color: var(--text-3); }
-    .pc-reason { font-size: 11px; color: var(--text-3); line-height: 1.5; margin-top: 1px; }
+    .pc-analysis { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; }
+    .pc-analysis-row { display: flex; gap: 6px; align-items: baseline; font-size: 11px; line-height: 1.4; }
+    .pc-analysis-label {
+      font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 1px;
+      color: var(--accent); flex-shrink: 0; min-width: 68px;
+    }
+    .pc-analysis-text { color: var(--text-2); }
+    .pc-analysis-risk .pc-analysis-label { color: var(--sit); }
     .pc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
     .pc-conf { font-size: 9px; color: var(--text-3); font-family: 'DM Mono', monospace; }
+    /* ADP value badge */
+    .adp-badge {
+      font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 0.8px;
+      padding: 2px 6px; border-radius: 4px; flex-shrink: 0;
+    }
+    .adp-value  { color: var(--start); background: color-mix(in srgb,var(--start) 12%,transparent); border: 1px solid color-mix(in srgb,var(--start) 30%,transparent); }
+    .adp-market { color: var(--text-3); background: transparent; border: 1px solid var(--border); }
+    .adp-reach  { color: var(--sit); background: rgba(255,77,109,0.10); border: 1px solid rgba(255,77,109,0.28); }
     .btn-pick {
       font-family: 'Bebas Neue', sans-serif; font-size: 10px; letter-spacing: 1.5px;
       padding: 5px 12px; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: none;
@@ -1020,6 +1035,7 @@
         team:     entry.player.maybeTeam || '?',
         tier:     entry.maybeTier || null,
         value:    entry.value,
+        adp:      entry.maybeAdp ?? entry.overallRank,
         espnId:   entry.player.espnId ? String(entry.player.espnId) : null,
       }));
     }
@@ -1046,21 +1062,21 @@
       // ── Step 2: build AI prompt ───────────────────────────────
       document.getElementById('gen-sub').textContent = 'DRAFTIQ IS ANALYZING YOUR LEAGUE...';
 
-      const SCHEMA = `{"board":[{"rank":1,"name":"string","position":"RB|WR|QB|TE|K|DEF","team":"string","tier":1,"reasoning":"≤12 words on value for this league","confidence":9}]}`;
+      const SCHEMA = `{"board":[{"rank":1,"name":"string","position":"RB|WR|QB|TE|K|DEF","team":"string","tier":1,"confidence":9,"why_now":"1 sentence","roster_fit":"1 sentence","adp_context":"1 sentence","risk":"1 sentence"}]}`;
 
       let system, prompt;
 
       if (fcPlayers) {
         const playerList = fcPlayers
-          .map(p => `${p.rank}. ${p.name} (${p.position}, ${p.team})${p.tier ? ' Tier'+p.tier : ''}`)
+          .map(p => `${p.rank}. ${p.name} (${p.position}, ${p.team})${p.tier ? ' Tier'+p.tier : ''}${p.adp && p.adp !== p.rank ? ` ADP:${Math.round(p.adp)}` : ''}`)
           .join('\n');
         const modeNote = leagueMode === 'dynasty'
           ? 'DYNASTY league: long-term upside and age matter.'
           : leagueMode === 'keeper'
           ? 'KEEPER league: balance current production with multi-year value.'
           : 'REDRAFT league: 2026 season output only.';
-        system = `You are DraftIQ. ${modeNote} Below is a live FantasyCalc ranking list for a ${s.num_teams}-team ${scoringLabel} league. Use these rankings as your EXACT baseline — do NOT reorder them. Your ONLY job is to add a reasoning field (≤12 words) and confidence score (1-10) to each player, and assign a tier (1=Elite top ~8, 2=Strong Starter, 3=Solid Starter, 4=Depth). Return all players in the SAME ORDER as the input list. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
-        prompt = `League: ${s.num_teams} teams, ${scoringLabel}, pick ${s.draft_position}.\nRoster slots: ${slotsStr}.\n\nFantasyCalc rankings — add reasoning and confidence, keep order:\n${playerList}`;
+        system = `You are DraftIQ. ${modeNote} Below is a live FantasyCalc ranking list for a ${s.num_teams}-team ${scoringLabel} league. Use these rankings as your EXACT baseline — do NOT reorder them. Your ONLY job is to add four analysis fields (1 sentence each) and a confidence score (1-10) to each player, and assign a tier (1=Elite top ~8, 2=Strong Starter, 3=Solid Starter, 4=Depth). Fields: why_now (why this player is valuable at their rank), roster_fit (how they fit a ${slotsStr} roster), adp_context (where they go vs where they should), risk (one honest concern). Return all players in the SAME ORDER as the input list. Respond ONLY with valid JSON, no markdown: ${SCHEMA}`;
+        prompt = `League: ${s.num_teams} teams, ${scoringLabel}, pick ${s.draft_position}.\nRoster slots: ${slotsStr}.\n\nFantasyCalc rankings — add 4-field analysis, keep order:\n${playerList}`;
       } else {
         // Fallback: pure AI generation
         const modeInstructions = leagueMode === 'dynasty'
@@ -1068,8 +1084,8 @@
           : leagueMode === 'keeper'
           ? 'KEEPER league. Balance current production with multi-year value.'
           : 'REDRAFT league. Rank strictly by projected 2026 season output. Age 30+ veterans ranked by realistic 2026 production only, not career reputation.';
-        system = `DATE: July 19, 2026. 2025 NFL season is over. You are DraftIQ, an expert ${scoringLabel} fantasy analyst. ${modeInstructions} Generate 30 players ranked for a ${s.num_teams}-team ${scoringLabel} draft. Tiers: 1=Elite, 2=Strong Starter, 3=Solid Starter, 4=Depth. Reasoning ≤12 words each. Flag any player whose team/status may have changed. Respond ONLY with valid JSON: ${SCHEMA}`;
-        prompt = `${s.num_teams} teams, ${scoringLabel}, ${s.draft_type} draft, pick ${s.draft_position}. Slots: ${slotsStr}. Generate 30-player board.`;
+        system = `DATE: July 19, 2026. 2025 NFL season is over. You are DraftIQ, an expert ${scoringLabel} fantasy analyst. ${modeInstructions} Generate 25 players ranked for a ${s.num_teams}-team ${scoringLabel} draft. Tiers: 1=Elite, 2=Strong Starter, 3=Solid Starter, 4=Depth. For each player include 4 fields (1 sentence each): why_now, roster_fit, adp_context, risk. Flag any player whose team/status may have changed. Respond ONLY with valid JSON: ${SCHEMA}`;
+        prompt = `${s.num_teams} teams, ${scoringLabel}, ${s.draft_type} draft, pick ${s.draft_position}. Slots: ${slotsStr}. Generate 25-player board.`;
       }
 
       try {
@@ -1084,12 +1100,13 @@
         const m = txt.replace(/```json|```/g, '').trim().match(/\{[\s\S]*\}/);
         if (!m) throw new Error('No valid JSON in AI response');
         const parsed = JSON.parse(m[0]);
-        // Merge FC team/value data back in where AI may have dropped it
+        // Merge FC team/adp/value data back in where AI may have dropped it
         const fcMap = {};
         if (fcPlayers) fcPlayers.forEach(p => { fcMap[p.name] = p; });
         const board = (parsed.board || []).map(p => ({
           ...p,
-          team: p.team || fcMap[p.name]?.team || '?',
+          team:      p.team || fcMap[p.name]?.team || '?',
+          adp:       fcMap[p.name]?.adp ?? p.rank,
           available: true,
         }));
         if (!board.length) throw new Error('AI returned an empty board');
@@ -1203,6 +1220,25 @@
         }
 
         const cardClass = p.available ? '' : (p.drafted_by === 'me' ? 'pc-mine' : 'pc-drafted');
+
+        // ADP value badge
+        let adpBadge = '';
+        if (p.available && p.adp != null) {
+          const diff = p.adp - currentPickNumber;
+          if (diff > 3)       adpBadge = `<span class="adp-badge adp-value">VALUE +${Math.round(diff)}</span>`;
+          else if (diff < -3) adpBadge = `<span class="adp-badge adp-reach">REACH ${Math.round(diff)}</span>`;
+          else                adpBadge = `<span class="adp-badge adp-market">MARKET</span>`;
+        }
+
+        // 4-field analysis
+        const analysis = (p.why_now || p.roster_fit || p.adp_context || p.risk) ? `
+          <div class="pc-analysis">
+            ${p.why_now     ? `<div class="pc-analysis-row"><span class="pc-analysis-label">WHY NOW</span><span class="pc-analysis-text">${escHtml(p.why_now)}</span></div>` : ''}
+            ${p.roster_fit  ? `<div class="pc-analysis-row"><span class="pc-analysis-label">ROSTER FIT</span><span class="pc-analysis-text">${escHtml(p.roster_fit)}</span></div>` : ''}
+            ${p.adp_context ? `<div class="pc-analysis-row"><span class="pc-analysis-label">ADP</span><span class="pc-analysis-text">${escHtml(p.adp_context)}</span></div>` : ''}
+            ${p.risk        ? `<div class="pc-analysis-row pc-analysis-risk"><span class="pc-analysis-label">RISK</span><span class="pc-analysis-text">${escHtml(p.risk)}</span></div>` : ''}
+          </div>` : '';
+
         html += `<div class="player-card ${cardClass}" id="pc-${escHtml(p.name.replace(/\s/g,'_'))}">
           <div class="pc-rank">${p.rank}</div>
           <div class="pc-center">
@@ -1210,8 +1246,9 @@
               <span class="pos-badge ${posClass(p.position)}">${escHtml(p.position)}</span>
               <span class="pc-name">${escHtml(p.name)}</span>
               <span class="pc-team">${escHtml(p.team||'')}</span>
+              ${adpBadge}
             </div>
-            <div class="pc-reason">${escHtml(p.reasoning||'')}</div>
+            ${analysis}
           </div>
           <div class="pc-right">
             <div class="pc-conf">CONF ${p.confidence||'?'}/10</div>
@@ -1328,9 +1365,9 @@
       const needsStr  = getRosterNeedsStr();
       const top10 = available.slice(0, 10).map(p => `${p.name}(${p.position})`).join(',');
 
-      const SCHEMA = `{"board":[{"name":"string","rank":1,"tier":1,"reasoning":"≤6 words"}]}`;
-      const system = `You are DraftIQ. Given a live draft state, re-rank the top available players by value for the user's roster needs. Respond ONLY with valid JSON: ${SCHEMA}`;
-      const prompt = `Pick ${currentPickNumber}, Rd${getCurrentRound()}. My roster: ${rosterStr}. Needs: ${needsStr}. Re-rank these top available (keep best order): ${top10}`;
+      const SCHEMA = `{"board":[{"name":"string","rank":1,"tier":1,"why_now":"≤8 words","roster_fit":"≤8 words","adp_context":"≤8 words","risk":"≤8 words"}]}`;
+      const system = `You are DraftIQ. Re-rank the top available players for the user's roster needs. For each player add 4 fields (≤8 words each): why_now, roster_fit, adp_context, risk. Respond ONLY with valid JSON: ${SCHEMA}`;
+      const prompt = `Pick ${currentPickNumber}, Rd${getCurrentRound()}. My roster: ${rosterStr}. Needs: ${needsStr}. Re-rank top available: ${top10}`;
 
       try {
         const res = await fetch(WORKER_URL, {
@@ -1351,7 +1388,16 @@
         draftBoard = draftBoard.map(p => {
           if (!p.available) return p;
           const updated = rankMap[p.name];
-          return updated ? { ...p, rank: updated.rank, tier: updated.tier, reasoning: updated.reasoning, confidence: updated.confidence } : p;
+          if (!updated) return p;
+          return {
+            ...p,
+            rank:        updated.rank,
+            tier:        updated.tier,
+            why_now:     updated.why_now     || p.why_now,
+            roster_fit:  updated.roster_fit  || p.roster_fit,
+            adp_context: updated.adp_context || p.adp_context,
+            risk:        updated.risk        || p.risk,
+          };
         });
 
         renderBoard();
