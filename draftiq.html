@@ -283,6 +283,16 @@
       border-radius: 8px; font-size: 11px; color: var(--accent); letter-spacing: 0.5px;
     }
     .reprio-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1s ease infinite; flex-shrink: 0; }
+    /* Corner update indicator */
+    .reprio-corner {
+      display: none; align-items: center; gap: 6px;
+      font-size: 9px; color: var(--accent); letter-spacing: 1px; font-family: 'DM Mono', monospace;
+    }
+    .reprio-corner.visible { display: flex; }
+    .reprio-corner-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+      animation: pulse 0.9s ease infinite; flex-shrink: 0;
+    }
 
     /* Draft layout */
     .draft-layout {
@@ -724,6 +734,9 @@
       <div class="draft-divider"></div>
       <div id="draft-turn-badge" class="draft-turn-badge turn-other">TEAM'S PICK</div>
       <div class="draft-header-right">
+        <div id="reprio-corner" class="reprio-corner">
+          <div class="reprio-corner-dot"></div>UPDATING...
+        </div>
         <button class="btn-end-draft" onclick="endDraft()">END DRAFT</button>
       </div>
     </div>
@@ -746,10 +759,6 @@
           <button class="filter-btn" data-pos="K" onclick="setFilter('K')">K</button>
           <button class="filter-btn" data-pos="DEF" onclick="setFilter('DEF')">DEF</button>
           <button class="filter-toggle" id="drafted-toggle" onclick="toggleShowDrafted()">HIDE DRAFTED</button>
-        </div>
-        <div id="reprio-bar" class="reprio-bar hidden" style="margin:8px 12px 0">
-          <div class="reprio-dot"></div>
-          <span>Board syncing...</span>
         </div>
         <div id="board-list"></div>
       </div>
@@ -1320,7 +1329,7 @@
       }
 
       updateDraftHeader();
-      renderBoard();
+      renderBoard();        // immediately reflects removal — no AI wait
       renderPickTracker();
       renderMyRoster();
 
@@ -1330,26 +1339,16 @@
         return;
       }
 
-      reprioritize();
+      reprioritize();  // fires in background; board stays interactive
     }
 
     /* ── REPRIORITIZATION ─────────────────────────────────────── */
     function showReprioState(on) {
-      document.getElementById('reprio-bar').classList.toggle('hidden', !on);
-      const badge = document.getElementById('draft-turn-badge');
-      if (on) {
-        badge.dataset.prevText  = badge.textContent;
-        badge.dataset.prevClass = badge.className;
-        badge.textContent = '↻ UPDATING...';
-        badge.className = 'draft-turn-badge';
-        badge.style.color = 'var(--flex)';
-        badge.style.borderColor = 'rgba(251,191,36,0.3)';
-        badge.style.background = 'rgba(251,191,36,0.08)';
-      } else {
-        badge.textContent = badge.dataset.prevText || '';
-        badge.className = badge.dataset.prevClass || 'draft-turn-badge turn-other';
-        badge.style.color = badge.style.borderColor = badge.style.background = '';
-      }
+      document.getElementById('reprio-corner').classList.toggle('visible', on);
+    }
+
+    function getNext3UserPicks() {
+      return userPickNumbers.filter(p => p >= currentPickNumber).slice(0, 3);
     }
 
     async function reprioritize() {
@@ -1360,19 +1359,19 @@
       const available = draftBoard.filter(p => p.available).sort((a,b) => a.rank - b.rank);
       if (!available.length) { isReprioritizing = false; showReprioState(false); return; }
 
-      const scoringLabel = { standard:'Standard', half_ppr:'Half PPR', full_ppr:'Full PPR' }[draftSession.scoring_format] || draftSession.scoring_format;
-      const rosterStr = myRoster.map(p => `${p.player_name}(${p.position})`).join(',') || 'None';
-      const needsStr  = getRosterNeedsStr();
-      const top10 = available.slice(0, 10).map(p => `${p.name}(${p.position})`).join(',');
+      const rosterStr  = myRoster.map(p => `${p.player_name}(${p.position})`).join(',') || 'None';
+      const needsStr   = getRosterNeedsStr();
+      const next3      = getNext3UserPicks().join(',') || '—';
+      const top10      = available.slice(0, 10).map(p => `${p.name}(${p.position})`).join(',');
 
-      const SCHEMA = `{"board":[{"name":"string","rank":1,"tier":1,"why_now":"≤8 words","roster_fit":"≤8 words","adp_context":"≤8 words","risk":"≤8 words"}]}`;
-      const system = `You are DraftIQ. Re-rank the top available players for the user's roster needs. For each player add 4 fields (≤8 words each): why_now, roster_fit, adp_context, risk. Respond ONLY with valid JSON: ${SCHEMA}`;
-      const prompt = `Pick ${currentPickNumber}, Rd${getCurrentRound()}. My roster: ${rosterStr}. Needs: ${needsStr}. Re-rank top available: ${top10}`;
+      const SCHEMA = `{"board":[{"name":"string","rank":1,"tier":1,"why_now":"≤8 words","roster_fit":"≤8 words"}]}`;
+      const system = `You are DraftIQ. Re-rank the top 10 available players for the user's roster. Return only why_now and roster_fit (≤8 words each). Respond ONLY with valid JSON: ${SCHEMA}`;
+      const prompt = `Pick ${currentPickNumber} (Rd ${getCurrentRound()}). My next picks: ${next3}. Roster: ${rosterStr}. Needs: ${needsStr}. Players: ${top10}`;
 
       try {
         const res = await fetch(WORKER_URL, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1500, system, messages: [{ role: 'user', content: prompt }] })
+          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1000, system, messages: [{ role: 'user', content: prompt }] })
         });
         const raw = await res.text();
         let d; try { d = JSON.parse(raw); } catch { throw new Error('Bad response'); }
@@ -1382,22 +1381,13 @@
         if (!m) throw new Error('No JSON');
         const newBoard = JSON.parse(m[0]).board || [];
 
-        // Merge new rankings
         const rankMap = {};
         newBoard.forEach(p => { rankMap[p.name] = p; });
         draftBoard = draftBoard.map(p => {
           if (!p.available) return p;
-          const updated = rankMap[p.name];
-          if (!updated) return p;
-          return {
-            ...p,
-            rank:        updated.rank,
-            tier:        updated.tier,
-            why_now:     updated.why_now     || p.why_now,
-            roster_fit:  updated.roster_fit  || p.roster_fit,
-            adp_context: updated.adp_context || p.adp_context,
-            risk:        updated.risk        || p.risk,
-          };
+          const u = rankMap[p.name];
+          if (!u) return p;
+          return { ...p, rank: u.rank, tier: u.tier, why_now: u.why_now || p.why_now, roster_fit: u.roster_fit || p.roster_fit };
         });
 
         renderBoard();
