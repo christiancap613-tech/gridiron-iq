@@ -1028,7 +1028,7 @@
       });
 
       // Return top 25 for board generation
-      return sorted.slice(0, 25).map(entry => ({
+      return sorted.slice(0, 20).map(entry => ({
         rank:     entry.overallRank,
         name:     entry.player.name,
         position: entry.player.position,
@@ -1062,7 +1062,7 @@
       // ── Step 2: build AI prompt ───────────────────────────────
       document.getElementById('gen-sub').textContent = 'DRAFTIQ IS ANALYZING YOUR LEAGUE...';
 
-      const SCHEMA = `{"board":[{"rank":1,"name":"string","position":"RB|WR|QB|TE|K|DEF","team":"string","tier":1,"confidence":9,"why_now":"1 sentence","roster_fit":"1 sentence","adp_context":"1 sentence","risk":"1 sentence"}]}`;
+      const SCHEMA = `{"board":[{"rank":1,"name":"string","position":"RB|WR|QB|TE|K|DEF","team":"string","tier":1,"confidence":9,"why_now":"≤10 words","roster_fit":"≤10 words","adp_context":"≤10 words","risk":"≤10 words"}]}`;
 
       let system, prompt;
 
@@ -1091,7 +1091,7 @@
       try {
         const res = await fetch(WORKER_URL, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 4000, system, messages: [{ role: 'user', content: prompt }] })
+          body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 6000, system, messages: [{ role: 'user', content: prompt }] })
         });
         const raw = await res.text();
         let d; try { d = JSON.parse(raw); } catch { throw new Error('Proxy returned non-JSON: ' + raw.slice(0, 300)); }
