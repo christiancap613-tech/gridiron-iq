@@ -1553,7 +1553,7 @@
         const data = await res.json();
         espnTeams = (data.teams || []).map(t => ({
           id: t.id,
-          name: (t.location + ' ' + t.nickname).trim(),
+          name: t.name || t.abbrev || `Team ${t.id}`,
           abbrev: t.abbrev,
         }));
         const sel = document.getElementById('espn-team-select');
