@@ -1420,7 +1420,7 @@
       if (!username) return;
       try {
         const record = { sleeper_username: username };
-        if (leagueId) record.league_id = leagueId;
+        if (leagueId) record.sleeper_league_id = leagueId;
         await sb.from('users').upsert(record, { onConflict: 'sleeper_username' });
       } catch (_) { /* non-critical */ }
     }

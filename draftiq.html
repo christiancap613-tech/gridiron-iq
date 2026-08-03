@@ -1627,6 +1627,18 @@
       } catch (e) {
         document.getElementById('espn-connect-status').textContent = `✓ Connected as "${team?.name}" · Position detection failed.`;
       }
+
+      // Persist ESPN connection to users table (keyed by Sleeper username if available)
+      const sleeperUsername = localStorage.getItem('giq_username');
+      if (sleeperUsername) {
+        try {
+          await sb.from('users').upsert({
+            sleeper_username: sleeperUsername,
+            espn_league_id:   String(ESPN_LEAGUE_ID),
+            espn_team_id:     String(val),
+          }, { onConflict: 'sleeper_username' });
+        } catch (_) { /* non-critical */ }
+      }
     }
 
     /* ── ESPN SYNC ────────────────────────────────────────────── */
