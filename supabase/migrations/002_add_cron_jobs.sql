@@ -1,9 +1,9 @@
 -- ── PG_CRON SCHEDULES FOR EDGE FUNCTIONS ────────────────────────────
--- Run this in Supabase SQL Editor (Dashboard → SQL Editor → New query)
+-- BEFORE RUNNING: enable pg_cron and pg_net via the Supabase Dashboard:
+--   Dashboard → Database → Extensions → search "pg_cron" → toggle on
+--   Dashboard → Database → Extensions → search "pg_net"  → toggle on
 --
--- Prerequisites:
---   pg_cron and pg_net must be enabled.
---   Dashboard → Database → Extensions → enable pg_cron and pg_net if not already on.
+-- Then paste this file into SQL Editor and run.
 --
 -- Schedule 1: generate-weekly-recommendations
 --   Every Wednesday 8pm ET = Thursday 00:00 UTC
@@ -13,17 +13,20 @@
 --   Every Monday 10am ET = Monday 14:00 UTC
 --   Cron: 0 14 * * 1
 
--- Enable extensions (safe if already enabled)
-CREATE EXTENSION IF NOT EXISTS pg_cron;
-CREATE EXTENSION IF NOT EXISTS pg_net;
+-- Remove existing jobs by name if they already exist (idempotent)
+DO $$
+BEGIN
+  PERFORM cron.unschedule('generate-weekly-recommendations');
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+$$;
 
--- Remove existing jobs with these names before re-creating (idempotent)
-SELECT cron.unschedule('generate-weekly-recommendations') WHERE EXISTS (
-  SELECT 1 FROM cron.job WHERE jobname = 'generate-weekly-recommendations'
-);
-SELECT cron.unschedule('grade-weekly-outcomes') WHERE EXISTS (
-  SELECT 1 FROM cron.job WHERE jobname = 'grade-weekly-outcomes'
-);
+DO $$
+BEGIN
+  PERFORM cron.unschedule('grade-weekly-outcomes');
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+$$;
 
 -- ── JOB 1: Generate weekly recommendations ───────────────────────────
 -- Fires Wednesday 8pm ET (Thursday 00:00 UTC) — cron: 0 0 * * 4
@@ -61,4 +64,4 @@ SELECT cron.schedule(
 
 -- ── VERIFY ───────────────────────────────────────────────────────────
 -- Run this after to confirm both jobs are registered:
--- SELECT jobid, jobname, schedule, active FROM cron.job ORDER BY jobid;
+SELECT jobid, jobname, schedule, active FROM cron.job ORDER BY jobid;
